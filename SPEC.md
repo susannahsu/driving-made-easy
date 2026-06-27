@@ -478,10 +478,19 @@ Tone throughout: calm, encouraging, adult — a supportive coach, not a scolding
 - **Real-world transfer is unproven.** *Mitigation:* model rules accurately, frame as
   practice not certification, gather user feedback in beta.
 
-**Open questions (still to resolve)**
-1. **Monetization / distribution** — personal project, free, or App Store? (Out of scope
-   for this spec but affects backend and asset-licensing choices.)
-2. **Voice** — recorded VO vs. on-device TTS for Coach lines?
+**Decisions made — distribution & voice**
+4. **Distribution: personal device + portfolio, not the App Store (v1).** The app is
+   built straight to the owner's iPhone via Xcode (free Apple ID; TestFlight optional
+   later). Portfolio value comes from a **public GitHub repo with clean code, a strong
+   README, and a recorded gameplay demo video** — not an App Store listing. A WebGL/demo
+   build is a nice-to-have for showing it off without an iPhone. No paid Apple Developer
+   account or App Store review pipeline in v1.
+5. **Coach voice: on-device text-to-speech** (`AVSpeechSynthesizer`). Free, instant, and
+   able to speak dynamic lines ("reduce to 25"); no recorded-audio asset pipeline to
+   maintain on a solo project. The audio layer is abstracted behind an interface so
+   recorded VO can be swapped in later for a more polished demo.
+
+*All planning questions are now resolved for v1.*
 
 ---
 
