@@ -4,9 +4,12 @@ The set of traffic rules and signs the **Coach** teaches (first 3 encounters) an
 enforces (4th onward) — see [`../SPEC.md`](../SPEC.md) §6. Each rule is data-driven; the
 fields below mirror the Rule schema in SPEC §8.3.
 
-> **Region note:** v1 assumes **US, right-hand traffic**, one state's conventions
-> (TBD — open question #1 in the spec). Signs/colors and a few right-of-way edge cases
-> change by region; the catalog is structured so a region is a swappable data set.
+> **Region note:** v1 ships **California** (US, right-hand traffic). Signs/colors and a
+> few right-of-way edge cases change by state, so the catalog is structured as a
+> **swappable per-state data set** — future versions let the player **select their
+> state** and load the matching rules. The rules below reflect California conventions
+> (e.g. right-on-red permitted after a full stop unless posted otherwise; school-zone
+> 25 mph when children are present).
 
 ## Legend
 

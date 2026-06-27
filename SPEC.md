@@ -55,8 +55,9 @@ muscle memory for the right reactions.
 - Not a multiplayer or online-competitive racing game.
 - Not a photoreal AAA simulator; no licensed real cars or real cities.
 - Not a replacement for a licensed instructor or a real road test.
-- Not region-exhaustive: v1 ships **one rule set** (US right-hand-drive, a single
-  state's conventions) with the architecture built so other regions can be added later.
+- Not region-exhaustive: v1 ships **one rule set — California (US, right-hand traffic)**,
+  with the architecture built so other states/regions can be added later and the player
+  can **select their state** (see Decisions, §12).
 - No VR headset support in v1 (designed so it's not precluded).
 
 ---
@@ -453,7 +454,19 @@ Tone throughout: calm, encouraging, adult — a supportive coach, not a scolding
 
 ---
 
-## 12. Risks & open questions
+## 12. Decisions, risks & open questions
+
+**Decisions made (locked for v1)**
+1. **Rule set: California.** v1 models California (US, right-hand-traffic) signs and
+   right-of-way conventions. **Future:** the player selects their **state**, and the
+   rule/sign catalog loads as a swappable data set per state — so the engine is built
+   state-agnostic from day one even though only CA ships first.
+2. **Rendering: on the phone.** The iPhone is both the wheel and the screen for v1
+   (held in landscape). Casting to a big screen stays a post-v1 stretch.
+3. **Physics: believable but forgiving.** Real momentum, weight transfer, and realistic
+   braking distances so habits transfer — but no punishing spinouts or stalls that would
+   discourage an anxious returning driver. The "Assisted" control scheme (§3.3) further
+   smooths the first drives; realism can be dialed up in later versions.
 
 **Risks**
 - **Steering feel** is make-or-break; if tilt-steering isn't satisfying, the whole
@@ -465,16 +478,10 @@ Tone throughout: calm, encouraging, adult — a supportive coach, not a scolding
 - **Real-world transfer is unproven.** *Mitigation:* model rules accurately, frame as
   practice not certification, gather user feedback in beta.
 
-**Open questions**
-1. **Whose rules?** Which state's/region's rules and signs ship first? (Affects sign
-   art, right-of-way edge cases, speed-limit conventions.)
-2. **Does the game render on the phone, or cast to a big screen for v1?** (Spec assumes
-   phone-renders for v1; cast is post-v1.)
-3. **How "hard" is realistic physics worth being** vs. approachability for anxious
-   beginners? (Suggest: believable but forgiving, with an "Assisted" mode.)
-4. **Monetization / distribution** — personal project, free, or App Store? (Out of scope
+**Open questions (still to resolve)**
+1. **Monetization / distribution** — personal project, free, or App Store? (Out of scope
    for this spec but affects backend and asset-licensing choices.)
-5. **Voice** — recorded VO vs. on-device TTS for Coach lines?
+2. **Voice** — recorded VO vs. on-device TTS for Coach lines?
 
 ---
 
