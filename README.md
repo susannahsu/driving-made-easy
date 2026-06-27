@@ -17,9 +17,11 @@ just like real life.
 
 ## Status
 
-📋 **Planning / spec phase.** No code yet. Start with [`SPEC.md`](./SPEC.md) for the
-full product and technical specification, and [`docs/`](./docs) for the supporting
-catalogs (traffic rules, signs, lessons).
+🏗️ **M0 — steering-feel prototype.** The full spec is in [`SPEC.md`](./SPEC.md); the
+first code milestone (Unity project: iPhone tilt-steering, a forgiving car, calibration,
+a cone slalom) lives in [`src/DrivingMadeEasy/`](./src/DrivingMadeEasy). See
+[`docs/m0-setup.md`](./docs/m0-setup.md) to open and run it (works on Mac/PC with a
+keyboard before you deploy to the phone).
 
 ## Documents
 
@@ -29,6 +31,7 @@ catalogs (traffic rules, signs, lessons).
 | [`docs/rules-catalog.md`](./docs/rules-catalog.md) | The catalog of traffic rules & signs the Coach teaches and enforces |
 | [`docs/lessons.md`](./docs/lessons.md) | The lesson / level progression (parking lot → streets → highway) |
 | [`docs/glossary.md`](./docs/glossary.md) | Shared vocabulary used across the spec |
+| [`docs/m0-setup.md`](./docs/m0-setup.md) | How to open & run the M0 steering prototype |
 
 ## The one-paragraph pitch
 

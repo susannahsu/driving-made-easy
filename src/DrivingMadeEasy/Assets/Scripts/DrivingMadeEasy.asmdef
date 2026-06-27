@@ -1,0 +1,14 @@
+{
+    "name": "DrivingMadeEasy",
+    "rootNamespace": "DrivingMadeEasy",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

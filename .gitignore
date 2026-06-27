@@ -1,0 +1,33 @@
+# ---- Unity ----
+# Generated folders (never commit these — Unity rebuilds them from Assets/ + Packages/)
+src/DrivingMadeEasy/[Ll]ibrary/
+src/DrivingMadeEasy/[Tt]emp/
+src/DrivingMadeEasy/[Oo]bj/
+src/DrivingMadeEasy/[Bb]uild/
+src/DrivingMadeEasy/[Bb]uilds/
+src/DrivingMadeEasy/[Ll]ogs/
+src/DrivingMadeEasy/[Uu]ser[Ss]ettings/
+src/DrivingMadeEasy/[Mm]emoryCaptures/
+
+# Asset meta files are intentionally NOT ignored — Unity needs them committed.
+
+# Crash / build reports
+sysinfo.txt
+crashlytics-build.properties
+*.apk
+*.aab
+*.unitypackage
+
+# ---- iOS / Xcode (generated export) ----
+src/DrivingMadeEasy/[Ii]l2[Cc]pp[Bb]uild*/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+
+# ---- OS / editor cruft ----
+.DS_Store
+Thumbs.db
+.vs/
+.idea/
+*.csproj
+*.sln

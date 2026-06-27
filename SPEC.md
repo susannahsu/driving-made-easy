@@ -503,8 +503,9 @@ driving-made-easy/
 ├── docs/
 │   ├── rules-catalog.md ← the traffic rules & signs the Coach teaches/enforces
 │   ├── lessons.md       ← lesson / level progression
-│   └── glossary.md      ← shared vocabulary
-└── (src/ added at M0 — Unity project, once the stack is confirmed)
+│   ├── glossary.md      ← shared vocabulary
+│   └── m0-setup.md      ← how to open/run the M0 steering prototype
+└── src/DrivingMadeEasy/ ← Unity project (M0: tilt-steering prototype)
 ```
 
 ---
