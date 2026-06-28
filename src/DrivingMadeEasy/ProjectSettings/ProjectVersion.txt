@@ -1,2 +1,3 @@
 m_EditorVersion: 2022.3.40f1
-m_EditorVersionWithRevision: 2022.3.40f1 (placeholder — open with 2022.3 LTS or newer)
+# Open with Unity 2022.3 LTS or newer via Unity Hub. The exact patch version above is a
+# baseline; Unity will offer to upgrade the project if you have a newer 2022.3.x / Unity 6.

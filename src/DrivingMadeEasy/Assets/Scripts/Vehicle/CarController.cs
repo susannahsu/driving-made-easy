@@ -58,17 +58,19 @@ namespace DrivingMadeEasy.Vehicle
             _rb = GetComponent<Rigidbody>();
             // Lower center of mass = much less likely to tip / feel tippy.
             _rb.centerOfMass += Vector3.down * 0.5f;
+        }
 
-            _input = driverInputSource as IDriverInput
-                     ?? GetComponent<IDriverInput>();
-            if (_input == null)
-            {
-                Debug.LogError("CarController has no IDriverInput source assigned.");
-            }
+        // Resolved lazily rather than in Awake: when the scene is built procedurally the
+        // bootstrap sets driverInputSource right after AddComponent (i.e. after Awake),
+        // so caching too early would ignore the explicit assignment.
+        private IDriverInput ResolveInput()
+        {
+            return _input ??= driverInputSource as IDriverInput ?? GetComponent<IDriverInput>();
         }
 
         private void FixedUpdate()
         {
+            _input = ResolveInput();
             if (_input == null) return;
 
             SpeedMetersPerSecond = Vector3.Dot(_rb.velocity, transform.forward);

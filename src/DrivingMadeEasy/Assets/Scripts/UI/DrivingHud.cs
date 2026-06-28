@@ -17,10 +17,10 @@ namespace DrivingMadeEasy.UI
 
         private IDriverInput _input;
 
-        private void Awake()
-        {
-            _input = driverInputSource as IDriverInput;
-        }
+        // Resolved lazily, NOT in Awake: when the scene is built procedurally the
+        // bootstrap assigns driverInputSource right after AddComponent, which runs
+        // *after* Awake — caching in Awake would leave this permanently null.
+        private IDriverInput Input => _input ??= driverInputSource as IDriverInput;
 
         private void OnGUI()
         {
@@ -43,7 +43,7 @@ namespace DrivingMadeEasy.UI
             var btnStyle = new GUIStyle(GUI.skin.button) { fontSize = 20 };
             if (GUI.Button(rect, "Recenter wheel", btnStyle))
             {
-                _input?.Calibrate();
+                Input?.Calibrate();
             }
         }
     }

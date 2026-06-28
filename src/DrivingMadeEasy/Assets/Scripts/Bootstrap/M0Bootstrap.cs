@@ -125,16 +125,22 @@ namespace DrivingMadeEasy.Bootstrap
             var fwd = collider.forwardFriction;  fwd.stiffness = 2.2f; collider.forwardFriction = fwd;
             var side = collider.sidewaysFriction; side.stiffness = 2.6f; collider.sidewaysFriction = side;
 
-            // Visual wheel (a flattened cylinder), purely cosmetic.
+            // Visual wheel: SyncMesh drives the *holder* with WheelCollider.GetWorldPose
+            // (which includes the rolling spin). The cylinder is a child carrying a fixed
+            // 90° offset so its round face points along the axle — a raw cylinder's long
+            // axis is its local Y, which would otherwise point forward.
+            var holder = new GameObject($"WheelMesh_{label}");
+            holder.transform.SetParent(parent, false);
+
             var mesh = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            mesh.name = $"WheelMesh_{label}";
+            mesh.name = $"WheelMeshVisual_{label}";
             Destroy(mesh.GetComponent<CapsuleCollider>());
-            mesh.transform.SetParent(parent, false);
+            mesh.transform.SetParent(holder.transform, false);
             mesh.transform.localScale = new Vector3(0.7f, 0.1f, 0.7f);
             mesh.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
             mesh.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.1f);
 
-            return (collider, mesh.transform);
+            return (collider, holder.transform);
         }
 
         // ---- Camera & HUD ---------------------------------------------------------

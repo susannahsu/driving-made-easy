@@ -63,7 +63,15 @@ On the `MotionSteeringInput` component:
 | `deadZoneDegrees` | car wanders when holding straight → raise slightly |
 | `sensitivityExponent` | hard to make fine corrections → raise (more gentle near center) |
 | `responsiveness` | feels laggy → raise; feels nervous/jittery → lower |
-| `returnToCenterAssist` | beginners → on; want raw control → off |
+| `returnToCenterAssist` / `assistStrength` | beginners → on + higher strength (faster self-centering); want raw control → off |
+| `invertSteering` | **tilting left steers right** on your device → toggle this (gyro axis frames vary by device/orientation) |
+
+> **On-device gyro caveat:** `Input.gyro.attitude` comes in the sensor's own coordinate
+> frame. The code applies the standard gyro→Unity conversion and reads roll about the
+> screen normal, but the correct axis/sign can still vary by device and orientation. If
+> steering feels mapped to the wrong axis (e.g. pitch instead of roll) or is reversed,
+> that's expected first-run tuning — flip `invertSteering` first, and if it's truly the
+> wrong axis, this is the one spot to validate on real hardware.
 
 ## Exit criteria for M0
 
