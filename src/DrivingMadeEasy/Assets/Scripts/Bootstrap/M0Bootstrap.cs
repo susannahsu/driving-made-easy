@@ -87,6 +87,114 @@ namespace DrivingMadeEasy.Bootstrap
             Destroy(g.GetComponent<BoxCollider>());
         }
 
+        /// A colliderless child cylinder (wheels, hub, etc.).
+        private GameObject Cyl(Transform parent, string name, Vector3 localPos, Vector3 localScale,
+                               Vector3 euler, Material mat)
+        {
+            var g = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            g.name = name;
+            g.transform.SetParent(parent, false);
+            g.transform.localPosition = localPos;
+            g.transform.localScale = localScale;
+            g.transform.localRotation = Quaternion.Euler(euler);
+            g.GetComponent<Renderer>().sharedMaterial = mat;
+            Destroy(g.GetComponent<CapsuleCollider>());
+            return g;
+        }
+
+        // ---- People ----------------------------------------------------------------
+
+        private Pedestrian BuildPerson(Vector3 pos, Color shirt)
+        {
+            var root = new GameObject("Pedestrian");
+            root.transform.position = pos;
+
+            var skin = Mat(new Color(0.85f, 0.7f, 0.6f));
+            var shirtMat = Mat(shirt);
+            var pantsMat = Mat(new Color(0.2f, 0.2f, 0.25f));
+
+            AddPart(root.transform, "Torso", new Vector3(0f, 1.15f, 0f),
+                    new Vector3(0.45f, 0.6f, 0.28f), shirtMat);
+
+            var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            head.name = "Head";
+            head.transform.SetParent(root.transform, false);
+            head.transform.localPosition = new Vector3(0f, 1.66f, 0f);
+            head.transform.localScale = new Vector3(0.34f, 0.36f, 0.34f);
+            head.GetComponent<Renderer>().sharedMaterial = skin;
+            Destroy(head.GetComponent<SphereCollider>());
+
+            var ped = root.AddComponent<Pedestrian>();
+            ped.leftLeg = LimbPivot(root.transform, new Vector3(-0.12f, 0.85f, 0f), pantsMat, 0.5f);
+            ped.rightLeg = LimbPivot(root.transform, new Vector3(0.12f, 0.85f, 0f), pantsMat, 0.5f);
+            ped.leftArm = LimbPivot(root.transform, new Vector3(-0.28f, 1.35f, 0f), shirtMat, 0.45f);
+            ped.rightArm = LimbPivot(root.transform, new Vector3(0.28f, 1.35f, 0f), shirtMat, 0.45f);
+            return ped;
+        }
+
+        private Transform LimbPivot(Transform parent, Vector3 localPos, Material mat, float length)
+        {
+            var pivot = new GameObject("Limb");
+            pivot.transform.SetParent(parent, false);
+            pivot.transform.localPosition = localPos;
+
+            var seg = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            seg.name = "Seg";
+            seg.transform.SetParent(pivot.transform, false);
+            seg.transform.localPosition = new Vector3(0f, -length * 0.5f, 0f);
+            seg.transform.localScale = new Vector3(0.12f, length, 0.12f);
+            seg.GetComponent<Renderer>().sharedMaterial = mat;
+            Destroy(seg.GetComponent<BoxCollider>());
+            return pivot.transform;
+        }
+
+        // ---- Steering wheel (cockpit) ----------------------------------------------
+
+        private void BuildSteeringWheel(Transform car, CarController controller)
+        {
+            var pivot = new GameObject("SteeringWheel");
+            pivot.transform.SetParent(car, false);
+            pivot.transform.localPosition = new Vector3(-0.35f, 0.30f, 0.62f);
+            pivot.transform.localRotation = Quaternion.Euler(-68f, 0f, 0f);
+
+            var plastic = Mat(new Color(0.08f, 0.08f, 0.09f), 0.2f, 0.5f);
+            const float R = 0.18f;
+            const int seg = 16;
+            for (int i = 0; i < seg; i++)
+            {
+                float a = (i / (float)seg) * Mathf.PI * 2f;
+                var s = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                s.name = "Rim";
+                s.transform.SetParent(pivot.transform, false);
+                s.transform.localPosition = new Vector3(Mathf.Cos(a) * R, Mathf.Sin(a) * R, 0f);
+                s.transform.localRotation = Quaternion.Euler(0f, 0f, a * Mathf.Rad2Deg);
+                float segLen = (2f * Mathf.PI * R / seg) * 1.3f;
+                s.transform.localScale = new Vector3(0.035f, segLen, 0.05f);
+                s.GetComponent<Renderer>().sharedMaterial = plastic;
+                Destroy(s.GetComponent<BoxCollider>());
+            }
+            for (int k = 0; k < 3; k++)
+            {
+                float a = (-90f + k * 120f) * Mathf.Deg2Rad;
+                var sp = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                sp.name = "Spoke";
+                sp.transform.SetParent(pivot.transform, false);
+                sp.transform.localPosition = new Vector3(Mathf.Cos(a) * R * 0.5f, Mathf.Sin(a) * R * 0.5f, 0f);
+                sp.transform.localRotation = Quaternion.Euler(0f, 0f, a * Mathf.Rad2Deg - 90f);
+                sp.transform.localScale = new Vector3(0.03f, R, 0.03f);
+                sp.GetComponent<Renderer>().sharedMaterial = plastic;
+                Destroy(sp.GetComponent<BoxCollider>());
+            }
+            Cyl(pivot.transform, "Hub", Vector3.zero, new Vector3(0.08f, 0.02f, 0.08f),
+                new Vector3(90f, 0f, 0f), plastic);
+
+            // Dashboard slab in front of the driver.
+            AddPart(car, "Dashboard", new Vector3(0f, 0.25f, 1.0f), new Vector3(1.7f, 0.4f, 0.5f),
+                    Mat(new Color(0.12f, 0.12f, 0.13f), 0.1f, 0.3f));
+
+            pivot.AddComponent<SteeringWheelView>().car = controller;
+        }
+
         // ---- Lighting & sky --------------------------------------------------------
 
         private void ConfigureLighting()
@@ -127,8 +235,10 @@ namespace DrivingMadeEasy.Bootstrap
 
             var trunkMat = Mat(new Color(0.35f, 0.25f, 0.16f));
             var leafMat = Mat(new Color(0.24f, 0.45f, 0.22f));
-            var windowMat = Mat(new Color(0.18f, 0.22f, 0.28f), 0.1f, 0.85f,
-                                 new Color(0.22f, 0.25f, 0.2f));
+            var windowMat = Mat(new Color(0.55f, 0.62f, 0.7f), 0.3f, 0.9f,
+                                 new Color(0.35f, 0.38f, 0.32f)); // softly lit glass
+            var doorMat = Mat(new Color(0.25f, 0.18f, 0.12f), 0.1f, 0.4f);
+            var roofMat = Mat(new Color(0.2f, 0.2f, 0.22f), 0f, 0.2f);
             Color[] palette =
             {
                 new Color(0.78f, 0.74f, 0.68f), new Color(0.70f, 0.60f, 0.55f),
@@ -159,12 +269,29 @@ namespace DrivingMadeEasy.Bootstrap
                         float h = 6f + ((i * 37) % 9); // varied heights, 6..14
                         var bMat = Mat(palette[(i + (s > 0 ? 2 : 0)) % palette.Length], 0f, 0.2f);
                         Box("Building", new Vector3(x, h * 0.5f, z), new Vector3(8f, h, 10f), bMat);
-                        // a glassy "windows" band on the street-facing face
-                        Box("Windows", new Vector3(x - 4.05f * s, h * 0.55f, z),
-                            new Vector3(0.1f, h * 0.7f, 8f), windowMat);
+
+                        float faceX = x - 4.05f * s; // street-facing facade
+                        Box("Roof", new Vector3(x, h + 0.15f, z), new Vector3(8.4f, 0.3f, 10.4f), roofMat);
+                        Box("Door", new Vector3(faceX, 1.0f, z), new Vector3(0.12f, 2.0f, 1.4f), doorMat);
+
+                        // A grid of lit windows on the street-facing facade.
+                        int rows = Mathf.Clamp(Mathf.RoundToInt(h / 2.2f), 2, 6);
+                        for (int rr = 0; rr < rows; rr++)
+                        {
+                            float wy = 2.6f + rr * 2.0f;
+                            if (wy > h - 0.8f) continue;
+                            for (int c = -1; c <= 1; c++)
+                                Box("Window", new Vector3(faceX, wy, z + c * 2.6f),
+                                    new Vector3(0.08f, 1.1f, 1.4f), windowMat);
+                        }
                     }
                 }
             }
+
+            // A few people strolling the sidewalks for life.
+            BuildPerson(new Vector3(4.6f, 0f, 12f), new Color(0.8f, 0.3f, 0.3f)).Configure(10f, 38f, true, 0.0f);
+            BuildPerson(new Vector3(-4.6f, 0f, 30f), new Color(0.3f, 0.55f, 0.3f)).Configure(20f, 52f, true, 1.3f);
+            BuildPerson(new Vector3(4.6f, 0f, 100f), new Color(0.4f, 0.4f, 0.7f)).Configure(92f, 120f, true, 0.7f);
         }
 
         // ---- Ground ---------------------------------------------------------------
@@ -241,6 +368,7 @@ namespace DrivingMadeEasy.Bootstrap
                 }
             };
 
+            BuildSteeringWheel(car.transform, controller);
             return car;
         }
 
@@ -427,28 +555,9 @@ namespace DrivingMadeEasy.Bootstrap
                 Destroy(stripe.GetComponent<BoxCollider>());
             }
 
-            // The pedestrian: a body + head so it reads as a person (visual only — the rule
-            // is judged by CrosswalkZone). The mover sits at ground level; parts give height.
-            var pedGo = new GameObject("Pedestrian");
-            pedGo.transform.position = new Vector3(-5f, 0f, zCross);
-
-            var bodyCap = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            bodyCap.name = "Body";
-            bodyCap.transform.SetParent(pedGo.transform, false);
-            bodyCap.transform.localPosition = new Vector3(0f, 0.9f, 0f);
-            bodyCap.transform.localScale = new Vector3(0.5f, 0.7f, 0.5f);
-            bodyCap.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.2f, 0.4f, 0.85f));
-            Destroy(bodyCap.GetComponent<CapsuleCollider>());
-
-            var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            head.name = "Head";
-            head.transform.SetParent(pedGo.transform, false);
-            head.transform.localPosition = new Vector3(0f, 1.7f, 0f);
-            head.transform.localScale = new Vector3(0.42f, 0.42f, 0.42f);
-            head.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.85f, 0.7f, 0.6f));
-            Destroy(head.GetComponent<SphereCollider>());
-
-            var ped = pedGo.AddComponent<Pedestrian>();
+            // The crossing pedestrian (visual only — the rule is judged by CrosswalkZone).
+            var ped = BuildPerson(new Vector3(-5f, 0f, zCross), new Color(0.2f, 0.4f, 0.85f));
+            ped.Configure(-5f, 5f, false, 0f);
 
             var zoneGo = new GameObject("CrosswalkZone");
             zoneGo.transform.position = new Vector3(0f, 1f, zCross - 1f);
@@ -488,6 +597,11 @@ namespace DrivingMadeEasy.Bootstrap
                         new Vector3(1.8f, 0.7f, 4.0f), Mat(carColors[i % carColors.Length], 0.4f, 0.6f));
                 AddPart(tcRoot.transform, "Cabin", new Vector3(0f, 0.5f, -0.2f),
                         new Vector3(1.6f, 0.5f, 1.9f), Mat(new Color(0.08f, 0.1f, 0.13f), 0.2f, 0.9f));
+                var tyre = Mat(new Color(0.05f, 0.05f, 0.06f), 0f, 0.3f);
+                for (int wx = -1; wx <= 1; wx += 2)
+                    for (int wz = -1; wz <= 1; wz += 2)
+                        Cyl(tcRoot.transform, "Wheel", new Vector3(0.9f * wx, -0.3f, 1.3f * wz),
+                            new Vector3(0.32f, 0.12f, 0.32f), new Vector3(0f, 0f, 90f), tyre);
                 var car = tcRoot.AddComponent<TrafficCar>();
                 car.startPoint = new Vector3(-35f, 0.4f, zCross);
                 car.endPoint = new Vector3(35f, 0.4f, zCross);
