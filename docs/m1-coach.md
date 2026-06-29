@@ -69,10 +69,18 @@ exactly what makes it testable without the game running.
 - **Persistence**: your coaching progress is saved to disk, so the Coach remembers which
   rules you've already mastered between drives and app launches. Reset it any time via
   **Tools ▸ Driving Made Easy ▸ Reset Coaching Progress**.
+- **Pedestrian crosswalk, in-world**: a pedestrian paces across a striped crosswalk; when
+  someone's in your path the Coach prompts you to yield, and a `CrosswalkZone` checks
+  whether you actually slowed down for them. It only counts as an encounter when a
+  pedestrian is genuinely crossing (a fair chance to act). This is the iconic "don't hit
+  people" rule — severity Severe.
+
+The drive now runs as a little course: **stop sign → 20 mph stretch → pedestrian
+crosswalk → cone slalom**.
 
 ## What's next (toward a full Lesson 1)
 
-`turn_signal` and `yield` are defined and tested in the engine but still need their
-in-world detection (which arrives with turning intersections and traffic). Pedestrians,
-traffic, and a proper road network are the rest of M2. Voice is still on-screen text —
+`turn_signal` and `yield` (car-to-car) are defined and tested in the engine but still need
+their in-world detection, which arrives with turning intersections and moving traffic.
+A proper road network and AI traffic are the rest of M2. Voice is still on-screen text —
 on-device text-to-speech (`AVSpeechSynthesizer`) arrives with the iPhone build.

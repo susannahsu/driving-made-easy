@@ -45,6 +45,17 @@ namespace DrivingMadeEasy.Coaching
                     postHoc: "Turned or changed lanes without signaling in time.")));
 
             r.Add(new RuleDefinition(
+                id: "pedestrian_crosswalk", category: "right_of_way", title: "Crosswalk",
+                severity: RuleSeverity.Severe,
+                penalty: new RulePenalty(points: 25, fine: 238),
+                guidance: new RuleGuidance(
+                    preempt: "Pedestrian at the crosswalk — slow down and let them cross.",
+                    correction: "You needed to yield there. Slow right down whenever someone's in the crosswalk.",
+                    encourage: "Good — you slowed and let them cross safely.",
+                    postHoc: "Failure to yield to a pedestrian in a crosswalk.",
+                    "crosswalk")));
+
+            r.Add(new RuleDefinition(
                 id: "yield", category: "right_of_way", title: "Yield",
                 severity: RuleSeverity.Major,
                 penalty: new RulePenalty(points: 15, fine: 238),

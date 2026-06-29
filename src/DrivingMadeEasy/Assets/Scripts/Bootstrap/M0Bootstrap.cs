@@ -36,6 +36,7 @@ namespace DrivingMadeEasy.Bootstrap
             CoachRuntime coach = BuildCoach();
             BuildStopSign(coach);
             BuildSpeedZone(coach);
+            BuildCrosswalk(coach);
             BuildCones();
         }
 
@@ -291,6 +292,41 @@ namespace DrivingMadeEasy.Bootstrap
             zone.limitMph = limitMph;
         }
 
+        private void BuildCrosswalk(CoachRuntime coach)
+        {
+            const float zCross = 48f;
+
+            // Zebra stripes painted across the road.
+            for (int i = 0; i < 6; i++)
+            {
+                var stripe = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                stripe.name = "CrosswalkStripe";
+                stripe.transform.localScale = new Vector3(0.5f, 0.05f, 2.4f);
+                stripe.transform.position = new Vector3(-2.5f + i * 1.0f, 0.05f, zCross);
+                stripe.GetComponent<Renderer>().material.color = Color.white;
+                Destroy(stripe.GetComponent<BoxCollider>());
+            }
+
+            // The pedestrian (visual only — the rule is judged by CrosswalkZone).
+            var pedGo = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            pedGo.name = "Pedestrian";
+            pedGo.transform.localScale = new Vector3(0.5f, 0.9f, 0.5f);
+            pedGo.transform.position = new Vector3(-5f, 0.9f, zCross);
+            pedGo.GetComponent<Renderer>().material.color = new Color(0.2f, 0.4f, 0.9f);
+            Destroy(pedGo.GetComponent<CapsuleCollider>());
+            var ped = pedGo.AddComponent<Pedestrian>();
+
+            var zoneGo = new GameObject("CrosswalkZone");
+            zoneGo.transform.position = new Vector3(0f, 1f, zCross - 1f);
+            var box = zoneGo.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(6f, 3f, 14f);
+            var zone = zoneGo.AddComponent<CrosswalkZone>();
+            zone.coach = coach;
+            zone.pedestrian = ped;
+            zone.ruleId = "pedestrian_crosswalk";
+        }
+
         // ---- Cones -----------------------------------------------------------------
 
         private void BuildCones()
@@ -302,8 +338,8 @@ namespace DrivingMadeEasy.Bootstrap
                 cone.name = $"Cone_{i}";
                 cone.transform.localScale = new Vector3(0.4f, 0.5f, 0.4f);
                 float x = (i % 2 == 0) ? -1.5f : 1.5f; // weave left/right for a slalom
-                // Start the slalom past the stop sign and speed-limit stretch.
-                cone.transform.position = new Vector3(x, 0.5f, 46f + i * coneSpacing);
+                // Start the slalom past the stop sign, speed stretch, and crosswalk.
+                cone.transform.position = new Vector3(x, 0.5f, 62f + i * coneSpacing);
                 cone.GetComponent<Renderer>().material.color = new Color(1f, 0.5f, 0f);
                 cones.Add(cone);
             }
