@@ -67,34 +67,35 @@ namespace DrivingMadeEasy.Game
 
         private void OnGUI()
         {
+            const int pad = 12;
             if (coach != null && coach.Session != null)
             {
                 var scoreStyle = new GUIStyle(GUI.skin.box)
-                    { fontSize = 20, alignment = TextAnchor.MiddleCenter };
-                GUI.Box(new Rect(Screen.width - 196, 16, 180, 44),
+                    { fontSize = 13, alignment = TextAnchor.MiddleCenter };
+                GUI.Box(new Rect(Screen.width - 134, pad, 122, 26),
                     $"Safety: {coach.Session.SafetyScore}", scoreStyle);
 
                 var statusStyle = new GUIStyle(GUI.skin.box)
-                    { fontSize = 14, alignment = TextAnchor.MiddleCenter };
-                GUI.Box(new Rect(Screen.width - 196, 64, 180, 28),
+                    { fontSize = 11, alignment = TextAnchor.MiddleCenter };
+                GUI.Box(new Rect(Screen.width - 134, pad + 30, 122, 22),
                     coach.StatusLine(trackedRuleId), statusStyle);
             }
 
-            // Active posted speed limit (top-left, below the speedometer/steer readouts).
+            // Active posted speed limit (top-left, below the speedometer).
             if (coach != null && coach.CurrentSpeedLimitMph > 0)
             {
                 var limitStyle = new GUIStyle(GUI.skin.box)
-                    { fontSize = 18, alignment = TextAnchor.MiddleCenter };
-                GUI.Box(new Rect(16, 120, 180, 40),
-                    $"Limit: {coach.CurrentSpeedLimitMph} mph", limitStyle);
+                    { fontSize = 13, alignment = TextAnchor.MiddleCenter };
+                GUI.Box(new Rect(pad, 48, 92, 26),
+                    $"Limit {coach.CurrentSpeedLimitMph}", limitStyle);
             }
 
             if (Time.time < _bannerUntil && !string.IsNullOrEmpty(_banner))
             {
                 var bannerStyle = new GUIStyle(GUI.skin.box)
-                    { fontSize = 17, alignment = TextAnchor.MiddleCenter, wordWrap = true };
-                float w = Mathf.Min(720f, Screen.width - 220f);
-                GUI.Box(new Rect((Screen.width - w) / 2f, 16f, w, 64f), _banner, bannerStyle);
+                    { fontSize = 14, alignment = TextAnchor.MiddleCenter, wordWrap = true };
+                float w = Mathf.Min(520f, Screen.width - 280f);
+                GUI.Box(new Rect((Screen.width - w) / 2f, pad, w, 48f), _banner, bannerStyle);
             }
 
             if (Time.time < _toastUntil && !string.IsNullOrEmpty(_toast))
@@ -104,9 +105,9 @@ namespace DrivingMadeEasy.Game
                     ? new Color(1f, 0.6f, 0.6f)
                     : new Color(0.6f, 1f, 0.6f);
                 var toastStyle = new GUIStyle(GUI.skin.box)
-                    { fontSize = 19, alignment = TextAnchor.MiddleCenter, wordWrap = true };
-                float w = Mathf.Min(640f, Screen.width - 220f);
-                GUI.Box(new Rect((Screen.width - w) / 2f, Screen.height * 0.5f - 30f, w, 60f),
+                    { fontSize = 15, alignment = TextAnchor.MiddleCenter, wordWrap = true };
+                float w = Mathf.Min(460f, Screen.width - 280f);
+                GUI.Box(new Rect((Screen.width - w) / 2f, Screen.height * 0.62f, w, 50f),
                     _toast, toastStyle);
                 GUI.color = prev;
             }

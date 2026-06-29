@@ -24,23 +24,18 @@ namespace DrivingMadeEasy.UI
 
         private void OnGUI()
         {
-            const int pad = 16;
-            var boxStyle = new GUIStyle(GUI.skin.box) { fontSize = 20, alignment = TextAnchor.MiddleLeft };
+            const int pad = 12;
+            var boxStyle = new GUIStyle(GUI.skin.box) { fontSize = 14, alignment = TextAnchor.MiddleCenter };
 
             if (car != null)
             {
                 int mph = Mathf.RoundToInt(Mathf.Abs(car.SpeedMph));
-                GUI.Box(new Rect(pad, pad, 220, 44), $"  {mph} mph", boxStyle);
-
-                float steer = car.SteeringValue;
-                GUI.Box(new Rect(pad, pad + 52, 220, 44),
-                    $"  steer: {steer:+0.00;-0.00; 0.00}", boxStyle);
+                GUI.Box(new Rect(pad, pad, 92, 30), $"{mph} mph", boxStyle);
             }
 
-            // Big, thumb-friendly recalibrate button (bottom-center).
-            float bw = 220, bh = 56;
-            var rect = new Rect((Screen.width - bw) / 2f, Screen.height - bh - pad, bw, bh);
-            var btnStyle = new GUIStyle(GUI.skin.button) { fontSize = 20 };
+            // Compact recalibrate button (bottom-left, out of the road view).
+            var rect = new Rect(pad, Screen.height - 34 - pad, 130, 30);
+            var btnStyle = new GUIStyle(GUI.skin.button) { fontSize = 13 };
             if (GUI.Button(rect, "Recenter wheel", btnStyle))
             {
                 Input?.Calibrate();

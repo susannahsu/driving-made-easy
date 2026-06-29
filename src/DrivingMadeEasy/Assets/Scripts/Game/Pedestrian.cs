@@ -23,7 +23,9 @@ namespace DrivingMadeEasy.Game
         public float onRoadHalfWidth = 3.3f;
 
         public Transform leftLeg, rightLeg, leftArm, rightArm;
-        public float swingDegrees = 32f;
+        [Tooltip("Limb swing amplitude — kept subtle so the walk reads naturally, not flailing.")]
+        public float swingDegrees = 16f;
+        public float armSwingScale = 0.6f;
 
         private float _fixedX, _fixedZ, _y, _prev;
 
@@ -63,11 +65,12 @@ namespace DrivingMadeEasy.Game
                 transform.rotation = Quaternion.LookRotation(fwd, Vector3.up);
             }
 
-            float s = Mathf.Sin((Time.time * walkSpeed + phaseOffset) * 3.2f) * swingDegrees;
+            float s = Mathf.Sin((Time.time * walkSpeed + phaseOffset) * 2.6f) * swingDegrees;
+            float a = s * armSwingScale;
             if (leftLeg) leftLeg.localRotation = Quaternion.Euler(s, 0f, 0f);
             if (rightLeg) rightLeg.localRotation = Quaternion.Euler(-s, 0f, 0f);
-            if (leftArm) leftArm.localRotation = Quaternion.Euler(-s, 0f, 0f);
-            if (rightArm) rightArm.localRotation = Quaternion.Euler(s, 0f, 0f);
+            if (leftArm) leftArm.localRotation = Quaternion.Euler(-a, 0f, 0f);
+            if (rightArm) rightArm.localRotation = Quaternion.Euler(a, 0f, 0f);
         }
 
         public bool IsOnCrosswalk => Mathf.Abs(transform.position.x) < onRoadHalfWidth;
