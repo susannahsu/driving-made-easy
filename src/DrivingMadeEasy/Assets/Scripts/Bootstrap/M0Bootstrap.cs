@@ -152,13 +152,15 @@ namespace DrivingMadeEasy.Bootstrap
 
         private void BuildSteeringWheel(Transform car, CarController controller)
         {
+            // Mounted above the body top (~0.40) so it isn't buried in the chassis, and in
+            // front of the driver's seat so the cockpit camera frames it.
             var pivot = new GameObject("SteeringWheel");
             pivot.transform.SetParent(car, false);
-            pivot.transform.localPosition = new Vector3(-0.35f, 0.30f, 0.62f);
+            pivot.transform.localPosition = new Vector3(-0.32f, 0.58f, 0.5f);
             pivot.transform.localRotation = Quaternion.Euler(-68f, 0f, 0f);
 
             var plastic = Mat(new Color(0.08f, 0.08f, 0.09f), 0.2f, 0.5f);
-            const float R = 0.18f;
+            const float R = 0.2f;
             const int seg = 16;
             for (int i = 0; i < seg; i++)
             {
@@ -188,8 +190,8 @@ namespace DrivingMadeEasy.Bootstrap
             Cyl(pivot.transform, "Hub", Vector3.zero, new Vector3(0.08f, 0.02f, 0.08f),
                 new Vector3(90f, 0f, 0f), plastic);
 
-            // Dashboard slab in front of the driver.
-            AddPart(car, "Dashboard", new Vector3(0f, 0.25f, 1.0f), new Vector3(1.7f, 0.4f, 0.5f),
+            // Dashboard slab just ahead of the wheel, above the body top so it's in view.
+            AddPart(car, "Dashboard", new Vector3(0f, 0.5f, 0.95f), new Vector3(1.7f, 0.3f, 0.5f),
                     Mat(new Color(0.12f, 0.12f, 0.13f), 0.1f, 0.3f));
 
             pivot.AddComponent<SteeringWheelView>().car = controller;

@@ -20,9 +20,9 @@ namespace DrivingMadeEasy.CameraRig
 
         [Header("Cockpit (driver's seat)")]
         [Tooltip("Local offset from the car: -x = left seat (US), +y = eye height, +z = forward.")]
-        public Vector3 cockpitOffset = new Vector3(-0.35f, 0.55f, 0.1f);
-        [Tooltip("Tilt the gaze down a few degrees so you see over the hood.")]
-        public float cockpitPitch = 4f;
+        public Vector3 cockpitOffset = new Vector3(-0.32f, 0.66f, -0.05f);
+        [Tooltip("Tilt the gaze down so you see the wheel and over the hood.")]
+        public float cockpitPitch = 10f;
 
         [Header("Chase (third person)")]
         public Vector3 chaseOffset = new Vector3(0f, 3f, -7f);
