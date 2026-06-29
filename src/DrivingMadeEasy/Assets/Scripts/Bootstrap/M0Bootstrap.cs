@@ -75,13 +75,16 @@ namespace DrivingMadeEasy.Bootstrap
             return g;
         }
 
-        /// A colliderless child cube placed in a parent's local space (e.g. car parts).
-        private void AddPart(Transform parent, string name, Vector3 localPos, Vector3 scale, Material mat)
+        /// A colliderless child cube placed in a parent's local space (e.g. car parts),
+        /// optionally rotated (euler degrees).
+        private void AddPart(Transform parent, string name, Vector3 localPos, Vector3 scale,
+                             Material mat, Vector3 euler = default)
         {
             var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
             g.name = name;
             g.transform.SetParent(parent, false);
             g.transform.localPosition = localPos;
+            g.transform.localRotation = Quaternion.Euler(euler);
             g.transform.localScale = scale;
             g.GetComponent<Renderer>().sharedMaterial = mat;
             Destroy(g.GetComponent<BoxCollider>());
@@ -371,7 +374,47 @@ namespace DrivingMadeEasy.Bootstrap
             };
 
             BuildSteeringWheel(car.transform, controller);
+            BuildInterior(car.transform);
             return car;
+        }
+
+        // ---- Car interior (cockpit framing) ----------------------------------------
+
+        private void BuildInterior(Transform car)
+        {
+            var trim = Mat(new Color(0.09f, 0.09f, 0.10f), 0.1f, 0.4f);     // dark plastic
+            var headliner = Mat(new Color(0.42f, 0.42f, 0.44f), 0f, 0.2f);  // light ceiling
+            var mirrorGlass = Mat(new Color(0.2f, 0.22f, 0.25f), 0.6f, 0.9f);
+            var gaugeMat = Mat(new Color(0.05f, 0.05f, 0.06f), 0.1f, 0.5f, new Color(0.04f, 0.12f, 0.14f));
+
+            // Windshield surround: top header + slanted A-pillars left and right.
+            AddPart(car, "Header", new Vector3(0f, 0.96f, 0.72f), new Vector3(1.75f, 0.12f, 0.16f), trim);
+            AddPart(car, "PillarL", new Vector3(-0.85f, 0.72f, 0.74f), new Vector3(0.12f, 0.62f, 0.12f), trim, new Vector3(18f, 0f, 10f));
+            AddPart(car, "PillarR", new Vector3(0.85f, 0.72f, 0.74f), new Vector3(0.12f, 0.62f, 0.12f), trim, new Vector3(18f, 0f, -10f));
+
+            // Roof rails + headliner over the cabin.
+            AddPart(car, "RoofRailL", new Vector3(-0.82f, 0.93f, 0.05f), new Vector3(0.1f, 0.1f, 1.5f), trim);
+            AddPart(car, "RoofRailR", new Vector3(0.82f, 0.93f, 0.05f), new Vector3(0.1f, 0.1f, 1.5f), trim);
+            AddPart(car, "Headliner", new Vector3(0f, 0.95f, 0.0f), new Vector3(1.6f, 0.06f, 1.4f), headliner);
+
+            // Doors (interior panels) + window sills on both sides.
+            for (int s = -1; s <= 1; s += 2)
+            {
+                AddPart(car, "Door", new Vector3(0.85f * s, 0.32f, -0.15f), new Vector3(0.1f, 0.5f, 1.7f), trim);
+                AddPart(car, "Sill", new Vector3(0.85f * s, 0.6f, -0.15f), new Vector3(0.09f, 0.08f, 1.7f), trim);
+            }
+
+            // Rearview mirror on a stalk under the header.
+            AddPart(car, "MirrorStalk", new Vector3(0f, 0.91f, 0.66f), new Vector3(0.03f, 0.07f, 0.03f), trim);
+            AddPart(car, "Mirror", new Vector3(0f, 0.87f, 0.62f), new Vector3(0.32f, 0.1f, 0.03f), mirrorGlass, new Vector3(8f, 0f, 0f));
+
+            // Dashboard gauge binnacle in front of the wheel, with two dials seen through it.
+            AddPart(car, "Binnacle", new Vector3(-0.32f, 0.46f, 0.72f), new Vector3(0.56f, 0.2f, 0.28f), trim);
+            Cyl(car, "Gauge", new Vector3(-0.45f, 0.5f, 0.59f), new Vector3(0.15f, 0.02f, 0.15f), new Vector3(80f, 0f, 0f), gaugeMat);
+            Cyl(car, "Gauge", new Vector3(-0.19f, 0.5f, 0.59f), new Vector3(0.15f, 0.02f, 0.15f), new Vector3(80f, 0f, 0f), gaugeMat);
+
+            // Center console between the seats.
+            AddPart(car, "Console", new Vector3(0.12f, 0.3f, 0.0f), new Vector3(0.3f, 0.28f, 1.0f), trim);
         }
 
         private (WheelCollider collider, Transform mesh) BuildWheel(
