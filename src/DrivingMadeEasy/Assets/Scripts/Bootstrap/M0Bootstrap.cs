@@ -24,7 +24,7 @@ namespace DrivingMadeEasy.Bootstrap
         public float lotSize = 120f;
 
         [Header("Slalom")]
-        public int coneCount = 8;
+        public int coneCount = 5;
         public float coneSpacing = 9f;
 
         private void Start()
@@ -37,6 +37,7 @@ namespace DrivingMadeEasy.Bootstrap
             BuildStopSign(coach);
             BuildSpeedZone(coach);
             BuildCrosswalk(coach);
+            BuildIntersection(coach);
             BuildCones();
         }
 
@@ -327,6 +328,66 @@ namespace DrivingMadeEasy.Bootstrap
             zone.ruleId = "pedestrian_crosswalk";
         }
 
+        private void BuildIntersection(CoachRuntime coach)
+        {
+            const float zCross = 78f;
+
+            // Cross street (east-west asphalt) forming a 4-way junction with the main road.
+            var cross = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cross.name = "CrossStreet";
+            cross.transform.localScale = new Vector3(70f, 0.04f, 7f);
+            cross.transform.position = new Vector3(0f, 0.02f, zCross);
+            cross.GetComponent<Renderer>().material.color = new Color(0.12f, 0.12f, 0.13f);
+            Destroy(cross.GetComponent<BoxCollider>());
+
+            // A small fleet streaming east across the junction, spaced so gaps appear.
+            var fleet = new List<TrafficCar>();
+            const int n = 4;
+            for (int i = 0; i < n; i++)
+            {
+                var tc = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                tc.name = $"TrafficCar_{i}";
+                tc.transform.localScale = new Vector3(1.8f, 0.8f, 4.0f);
+                tc.GetComponent<Renderer>().material.color = new Color(0.25f, 0.5f, 0.85f);
+                Destroy(tc.GetComponent<BoxCollider>());
+                var car = tc.AddComponent<TrafficCar>();
+                car.startPoint = new Vector3(-35f, 0.6f, zCross);
+                car.endPoint = new Vector3(35f, 0.6f, zCross);
+                car.speed = 9f;
+                car.startOffset = i / (float)n;
+                fleet.Add(car);
+            }
+
+            // Yield sign on the approach.
+            var pole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            pole.name = "YieldSignPole";
+            pole.transform.localScale = new Vector3(0.1f, 1.0f, 0.1f);
+            pole.transform.position = new Vector3(2.4f, 1.0f, zCross - 8f);
+            pole.GetComponent<Renderer>().material.color = new Color(0.3f, 0.3f, 0.3f);
+            Destroy(pole.GetComponent<CapsuleCollider>());
+
+            var sign = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            sign.name = "YieldSign";
+            sign.transform.localScale = new Vector3(0.7f, 0.7f, 0.08f);
+            sign.transform.position = new Vector3(2.4f, 1.9f, zCross - 8f);
+            sign.transform.localRotation = Quaternion.Euler(0f, 0f, 45f); // diamond
+            sign.GetComponent<Renderer>().material.color = new Color(0.9f, 0.7f, 0.1f);
+            Destroy(sign.GetComponent<BoxCollider>());
+
+            // Yield zone covering the approach just south of the cross street.
+            var zoneGo = new GameObject("CrossTrafficZone");
+            zoneGo.transform.position = new Vector3(0f, 1f, zCross - 6f);
+            var box = zoneGo.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(6f, 3f, 12f); // approach z ~ 66..78
+            var zone = zoneGo.AddComponent<CrossTrafficZone>();
+            zone.coach = coach;
+            zone.traffic = fleet.ToArray();
+            zone.conflictCenter = new Vector3(0f, 0.6f, zCross);
+            zone.conflictRadius = 9f;
+            zone.ruleId = "yield";
+        }
+
         // ---- Cones -----------------------------------------------------------------
 
         private void BuildCones()
@@ -338,8 +399,8 @@ namespace DrivingMadeEasy.Bootstrap
                 cone.name = $"Cone_{i}";
                 cone.transform.localScale = new Vector3(0.4f, 0.5f, 0.4f);
                 float x = (i % 2 == 0) ? -1.5f : 1.5f; // weave left/right for a slalom
-                // Start the slalom past the stop sign, speed stretch, and crosswalk.
-                cone.transform.position = new Vector3(x, 0.5f, 62f + i * coneSpacing);
+                // Start the slalom past the stop sign, speed stretch, crosswalk, and junction.
+                cone.transform.position = new Vector3(x, 0.5f, 95f + i * coneSpacing);
                 cone.GetComponent<Renderer>().material.color = new Color(1f, 0.5f, 0f);
                 cones.Add(cone);
             }

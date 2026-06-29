@@ -75,12 +75,19 @@ exactly what makes it testable without the game running.
   pedestrian is genuinely crossing (a fair chance to act). This is the iconic "don't hit
   people" rule — severity Severe.
 
+- **Intersection with cross traffic, in-world**: a 4-way junction where a small fleet of
+  cars streams across your path. When a car is crossing as you approach, the Coach prompts
+  you to **yield** (slow and let them through), and a `CrossTrafficZone` checks whether you
+  actually slowed — the car-to-car `yield` rule, now live. It only counts when traffic is
+  genuinely crossing (wait for a gap and you pass clean).
+
 The drive now runs as a little course: **stop sign → 20 mph stretch → pedestrian
-crosswalk → cone slalom**.
+crosswalk → cross-traffic junction → cone slalom**.
 
 ## What's next (toward a full Lesson 1)
 
-`turn_signal` and `yield` (car-to-car) are defined and tested in the engine but still need
-their in-world detection, which arrives with turning intersections and moving traffic.
-A proper road network and AI traffic are the rest of M2. Voice is still on-screen text —
-on-device text-to-speech (`AVSpeechSynthesizer`) arrives with the iPhone build.
+`turn_signal` is defined and tested in the engine but still needs blinker input + turn
+detection (the next step). Traffic is currently visual-only and loops on a fixed path;
+proper lane-following / light-obeying AI, collisions, and a real road network are the rest
+of M2. Voice is still on-screen text — on-device text-to-speech (`AVSpeechSynthesizer`)
+arrives with the iPhone build.
