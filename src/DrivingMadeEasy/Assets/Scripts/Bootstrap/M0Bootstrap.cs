@@ -4,6 +4,7 @@ using DrivingMadeEasy.Input;
 using DrivingMadeEasy.Vehicle;
 using DrivingMadeEasy.CameraRig;
 using DrivingMadeEasy.UI;
+using DrivingMadeEasy.Game;
 
 namespace DrivingMadeEasy.Bootstrap
 {
@@ -31,6 +32,8 @@ namespace DrivingMadeEasy.Bootstrap
             BuildGround();
             GameObject car = BuildCar(new Vector3(0f, 0.6f, -20f));
             BuildCamera(car.transform);
+            CoachRuntime coach = BuildCoach();
+            BuildStopSign(coach);
             BuildCones();
         }
 
@@ -165,6 +168,56 @@ namespace DrivingMadeEasy.Bootstrap
             hud.driverInputSource = carTransform.GetComponent<MotionSteeringInput>();
         }
 
+        // ---- Coach + stop sign (M1) ------------------------------------------------
+
+        private CoachRuntime BuildCoach()
+        {
+            var go = new GameObject("Coach");
+            var runtime = go.AddComponent<CoachRuntime>();
+            var hud = go.AddComponent<CoachHud>();
+            hud.coach = runtime;          // CoachHud subscribes in Start(), after this runs
+            hud.trackedRuleId = "stop_sign";
+            return runtime;
+        }
+
+        private void BuildStopSign(CoachRuntime coach)
+        {
+            const float zLine = -6f;   // where the stop line sits
+            const float sideX = 2.4f;  // sign stands to the right of the lane
+
+            var pole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            pole.name = "StopSignPole";
+            pole.transform.localScale = new Vector3(0.1f, 1.0f, 0.1f);
+            pole.transform.position = new Vector3(sideX, 1.0f, zLine);
+            pole.GetComponent<Renderer>().material.color = new Color(0.3f, 0.3f, 0.3f);
+            Destroy(pole.GetComponent<CapsuleCollider>());
+
+            var sign = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            sign.name = "StopSign";
+            sign.transform.localScale = new Vector3(0.7f, 0.7f, 0.08f);
+            sign.transform.position = new Vector3(sideX, 1.9f, zLine);
+            sign.GetComponent<Renderer>().material.color = new Color(0.8f, 0.05f, 0.05f);
+            Destroy(sign.GetComponent<BoxCollider>());
+
+            var line = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            line.name = "StopLine";
+            line.transform.localScale = new Vector3(6f, 0.02f, 0.4f);
+            line.transform.position = new Vector3(0f, 0.02f, zLine);
+            line.GetComponent<Renderer>().material.color = Color.white;
+            Destroy(line.GetComponent<BoxCollider>());
+
+            // Trigger zone: the approach plus the line. Car enters ~7m before the line and
+            // exits a couple of metres past it; StopSignZone judges the stop in between.
+            var zoneGo = new GameObject("StopSignZone");
+            zoneGo.transform.position = new Vector3(0f, 1f, zLine - 2.5f);
+            var box = zoneGo.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(6f, 3f, 9f);
+            var zone = zoneGo.AddComponent<StopSignZone>();
+            zone.coach = coach;
+            zone.ruleId = "stop_sign";
+        }
+
         // ---- Cones -----------------------------------------------------------------
 
         private void BuildCones()
@@ -176,7 +229,8 @@ namespace DrivingMadeEasy.Bootstrap
                 cone.name = $"Cone_{i}";
                 cone.transform.localScale = new Vector3(0.4f, 0.5f, 0.4f);
                 float x = (i % 2 == 0) ? -1.5f : 1.5f; // weave left/right for a slalom
-                cone.transform.position = new Vector3(x, 0.5f, -10f + i * coneSpacing);
+                // Start the slalom past the stop line so the stop sign is met first.
+                cone.transform.position = new Vector3(x, 0.5f, 8f + i * coneSpacing);
                 cone.GetComponent<Renderer>().material.color = new Color(1f, 0.5f, 0f);
                 cones.Add(cone);
             }

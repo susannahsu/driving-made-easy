@@ -17,11 +17,15 @@ just like real life.
 
 ## Status
 
-🏗️ **M0 — steering-feel prototype.** The full spec is in [`SPEC.md`](./SPEC.md); the
-first code milestone (Unity project: iPhone tilt-steering, a forgiving car, calibration,
-a cone slalom) lives in [`src/DrivingMadeEasy/`](./src/DrivingMadeEasy). See
-[`docs/m0-setup.md`](./docs/m0-setup.md) to open and run it (works on Mac/PC with a
-keyboard before you deploy to the phone).
+🏗️ **M1 — Rules Engine + Coach.** Building on the M0 steering prototype, the Coach now
+works: drive up to the stop sign in the parking lot and it coaches you for 3 encounters,
+then starts ticketing you (teach → fade → enforce). The full spec is in
+[`SPEC.md`](./SPEC.md); the Unity project is in
+[`src/DrivingMadeEasy/`](./src/DrivingMadeEasy).
+
+- Run it: [`docs/m0-setup.md`](./docs/m0-setup.md) (open in Unity, press Play — keyboard/
+  mouse on a laptop; real tilt on the iPhone).
+- See the Coach + how it works: [`docs/m1-coach.md`](./docs/m1-coach.md).
 
 ## Documents
 
