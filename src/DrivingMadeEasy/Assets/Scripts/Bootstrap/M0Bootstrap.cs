@@ -37,10 +37,13 @@ namespace DrivingMadeEasy.Bootstrap
             BuildCamera(car.transform);
             CoachRuntime coach = BuildCoach();
             BuildStopSign(coach);
-            BuildSpeedZone(coach);
+            // speed-limit stretch, crosswalk, school zone, junction, traffic light, lane test
+            BuildSpeedSign(coach, "speed_limit", 25, 2f, 20f, 36f, new Color(0.95f, 0.95f, 0.95f));
             BuildCrosswalk(coach);
+            BuildSpeedSign(coach, "school_zone", 15, 60f, 74f, 26f, new Color(1f, 0.6f, 0.1f));
             BuildIntersection(coach);
-            BuildCones();
+            BuildTrafficLight(coach);
+            BuildLaneZone(coach);
         }
 
         // ---- Visual helpers --------------------------------------------------------
@@ -281,7 +284,7 @@ namespace DrivingMadeEasy.Bootstrap
         {
             var sidewalkMat = Mat(new Color(0.62f, 0.62f, 0.62f), 0f, 0.1f);
             for (int s = -1; s <= 1; s += 2)
-                Box("Sidewalk", new Vector3(4.6f * s, 0.06f, 50f), new Vector3(2.2f, 0.12f, 170f), sidewalkMat);
+                Box("Sidewalk", new Vector3(4.6f * s, 0.06f, 85f), new Vector3(2.2f, 0.12f, 290f), sidewalkMat);
 
             var trunkMat = Mat(new Color(0.35f, 0.25f, 0.16f));
             var leafMat = Mat(new Color(0.24f, 0.45f, 0.22f));
@@ -299,10 +302,10 @@ namespace DrivingMadeEasy.Bootstrap
             for (int s = -1; s <= 1; s += 2)
             {
                 float x = 12f * s;
-                for (int i = 0; i < 12; i++)
+                for (int i = 0; i < 20; i++)
                 {
                     float z = -28f + i * 14f;
-                    if (Mathf.Abs(z - 78f) < 9f) continue; // keep the junction clear
+                    if (Mathf.Abs(z - 100f) < 10f) continue; // keep the junction clear
 
                     if (i % 3 == 1)
                     {
@@ -341,7 +344,7 @@ namespace DrivingMadeEasy.Bootstrap
             // A few people strolling the sidewalks for life.
             BuildPerson(new Vector3(4.6f, 0f, 12f), new Color(0.8f, 0.3f, 0.3f)).Configure(10f, 38f, true, 0.0f);
             BuildPerson(new Vector3(-4.6f, 0f, 30f), new Color(0.3f, 0.55f, 0.3f)).Configure(20f, 52f, true, 1.3f);
-            BuildPerson(new Vector3(4.6f, 0f, 100f), new Color(0.4f, 0.4f, 0.7f)).Configure(92f, 120f, true, 0.7f);
+            BuildPerson(new Vector3(4.6f, 0f, 160f), new Color(0.4f, 0.4f, 0.7f)).Configure(150f, 195f, true, 0.7f);
         }
 
         // ---- Ground ---------------------------------------------------------------
@@ -351,8 +354,8 @@ namespace DrivingMadeEasy.Bootstrap
             // Grass plane, large enough to run beyond the fog so there's no visible edge.
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
             ground.name = "Ground";
-            ground.transform.position = new Vector3(0f, 0f, 50f);
-            ground.transform.localScale = Vector3.one * 32f; // 320 units across
+            ground.transform.position = new Vector3(0f, 0f, 90f);
+            ground.transform.localScale = Vector3.one * 38f; // ~380 units across
             ground.GetComponent<Renderer>().sharedMaterial =
                 Mat(new Color(0.34f, 0.45f, 0.27f), 0f, 0.05f);
 
@@ -565,13 +568,13 @@ namespace DrivingMadeEasy.Bootstrap
             var paintWhite = Mat(new Color(0.92f, 0.92f, 0.92f), 0f, 0.1f);
             var paintYellow = Mat(new Color(0.92f, 0.82f, 0.2f), 0f, 0.1f);
 
-            Box("Road", new Vector3(0f, 0.02f, 50f), new Vector3(7f, 0.04f, 170f), asphalt);
+            Box("Road", new Vector3(0f, 0.02f, 85f), new Vector3(7f, 0.04f, 290f), asphalt);
 
             for (int s = -1; s <= 1; s += 2)
-                Box("RoadEdge", new Vector3(3.3f * s, 0.05f, 50f), new Vector3(0.15f, 0.05f, 170f), paintWhite);
+                Box("RoadEdge", new Vector3(3.3f * s, 0.05f, 85f), new Vector3(0.15f, 0.05f, 290f), paintWhite);
 
-            for (int i = 0; i < 28; i++)
-                Box("CenterDash", new Vector3(0f, 0.05f, -30f + i * 6f), new Vector3(0.15f, 0.05f, 2f), paintYellow);
+            for (int i = 0; i < 42; i++)
+                Box("CenterDash", new Vector3(0f, 0.05f, -36f + i * 6f), new Vector3(0.15f, 0.05f, 2f), paintYellow);
         }
 
         // ---- Coach + stop sign (M1) ------------------------------------------------
@@ -628,26 +631,24 @@ namespace DrivingMadeEasy.Bootstrap
             zone.ruleId = "stop_sign";
         }
 
-        private void BuildSpeedZone(CoachRuntime coach)
+        // A posted speed-limit (or school-zone) sign + an enforced stretch behind it.
+        private void BuildSpeedSign(CoachRuntime coach, string ruleId, int limitMph,
+                                    float zSign, float zCenter, float zLength, Color signColor)
         {
-            const int limitMph = 20;
-            const float zSign = 2f;       // posted limit sign
-            const float zCenter = 20f;    // middle of the enforced stretch
-            const float zLength = 36f;    // stretch spans ~z 2..38 — long enough to manage speed
+            var poleMat = Mat(new Color(0.3f, 0.3f, 0.3f), 0.2f, 0.4f);
 
             var pole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            pole.name = "SpeedSignPole";
+            pole.name = "SignPole";
             pole.transform.localScale = new Vector3(0.1f, 1.0f, 0.1f);
             pole.transform.position = new Vector3(2.4f, 1.0f, zSign);
-            pole.GetComponent<Renderer>().material.color = new Color(0.3f, 0.3f, 0.3f);
+            pole.GetComponent<Renderer>().sharedMaterial = poleMat;
             Destroy(pole.GetComponent<CapsuleCollider>());
 
-            // White "speed limit" sign (the number is read out by the Coach + HUD for now).
             var sign = GameObject.CreatePrimitive(PrimitiveType.Cube);
             sign.name = "SpeedLimitSign";
             sign.transform.localScale = new Vector3(0.6f, 0.8f, 0.08f);
             sign.transform.position = new Vector3(2.4f, 1.95f, zSign);
-            sign.GetComponent<Renderer>().material.color = new Color(0.95f, 0.95f, 0.95f);
+            sign.GetComponent<Renderer>().sharedMaterial = Mat(signColor, 0f, 0.2f);
             Destroy(sign.GetComponent<BoxCollider>());
 
             var zoneGo = new GameObject("SpeedZone");
@@ -657,7 +658,7 @@ namespace DrivingMadeEasy.Bootstrap
             box.size = new Vector3(6f, 3f, zLength);
             var zone = zoneGo.AddComponent<SpeedZone>();
             zone.coach = coach;
-            zone.ruleId = "speed_limit";
+            zone.ruleId = ruleId;
             zone.limitMph = limitMph;
         }
 
@@ -693,7 +694,7 @@ namespace DrivingMadeEasy.Bootstrap
 
         private void BuildIntersection(CoachRuntime coach)
         {
-            const float zCross = 78f;
+            const float zCross = 100f;
 
             // Cross street (east-west asphalt) forming a 4-way junction with the main road.
             var cross = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -762,6 +763,64 @@ namespace DrivingMadeEasy.Bootstrap
             var turn = turnGo.AddComponent<TurnZone>();
             turn.coach = coach;
             turn.ruleId = "turn_signal";
+        }
+
+        // ---- Traffic light ---------------------------------------------------------
+
+        private void BuildTrafficLight(CoachRuntime coach)
+        {
+            const float zLine = 135f;
+
+            Box("StopLine", new Vector3(0f, 0.06f, zLine), new Vector3(7f, 0.04f, 0.4f), Mat(Color.white, 0f, 0.1f));
+
+            var poleMat = Mat(new Color(0.22f, 0.22f, 0.24f), 0.4f, 0.4f);
+            Box("LightPole", new Vector3(3.6f, 2.0f, zLine), new Vector3(0.16f, 4.0f, 0.16f), poleMat);
+            Box("LightArm", new Vector3(2.0f, 3.9f, zLine), new Vector3(3.4f, 0.13f, 0.13f), poleMat);
+
+            var housing = Box("LightHousing", new Vector3(0.8f, 3.55f, zLine),
+                              new Vector3(0.32f, 1.05f, 0.26f), Mat(new Color(0.05f, 0.05f, 0.05f), 0.2f, 0.4f));
+
+            // Bulbs face the approaching driver (-z side of the housing).
+            float zb = zLine - 0.18f;
+            var tl = housing.AddComponent<TrafficLight>();
+            tl.redBulb = Bulb("Red", new Vector3(0.8f, 3.9f, zb));
+            tl.yellowBulb = Bulb("Yellow", new Vector3(0.8f, 3.55f, zb));
+            tl.greenBulb = Bulb("Green", new Vector3(0.8f, 3.2f, zb));
+
+            var zoneGo = new GameObject("TrafficLightZone");
+            zoneGo.transform.position = new Vector3(0f, 1f, zLine - 3f);
+            var box = zoneGo.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(6f, 3f, 10f); // approach z ~ 127..137
+            var z = zoneGo.AddComponent<TrafficLightZone>();
+            z.coach = coach;
+            z.light = tl;
+            z.ruleId = "traffic_light";
+        }
+
+        private Renderer Bulb(string label, Vector3 pos)
+        {
+            var b = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            b.name = "Bulb_" + label;
+            b.transform.position = pos;
+            b.transform.localScale = Vector3.one * 0.22f;
+            b.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.06f, 0.06f, 0.06f), 0.1f, 0.5f, Color.black);
+            Destroy(b.GetComponent<SphereCollider>());
+            return b.GetComponent<Renderer>();
+        }
+
+        // ---- Lane keeping stretch --------------------------------------------------
+
+        private void BuildLaneZone(CoachRuntime coach)
+        {
+            var zoneGo = new GameObject("LaneZone");
+            zoneGo.transform.position = new Vector3(0f, 1f, 175f);
+            var box = zoneGo.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(10f, 3f, 50f); // a long straight: keep it between the lines
+            var lane = zoneGo.AddComponent<LaneZone>();
+            lane.coach = coach;
+            lane.ruleId = "lane_keeping";
         }
 
         // ---- Cones -----------------------------------------------------------------

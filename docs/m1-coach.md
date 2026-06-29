@@ -89,13 +89,21 @@ crosswalk → cross-traffic junction → cone slalom**.
   actually turned and checks you signaled that direction — the `turn_signal` rule. Driving
   straight through is a no-event.
 
-The course now exercises **5 in-world rules**: stop sign, speed limit, crosswalk yield,
-cross-traffic yield, and turn signal.
+- **Traffic light**: a signal head cycles green/yellow/red; a `TrafficLightZone` checks you
+  stopped if it was red as you reached the line (`traffic_light`). Green = no-event.
+- **School zone**: a 15 mph zone (reuses the speed-limit machinery with the `school_zone`
+  rule and an orange sign).
+- **Lane keeping**: a monitored straight stretch — drift off your lane/the road and the
+  `lane_keeping` rule flags it.
+
+The course now runs: **stop sign → 25 mph stretch → crosswalk → school zone (15) →
+cross-traffic junction (yield + turn signal) → traffic light → lane-keeping straight**,
+exercising **8 in-world rules**.
 
 ## What's next (toward a full Lesson 1)
 
-Still to wire in: traffic lights, 4-way stops, lane-keeping, following distance, and a
-school zone. Traffic is currently visual-only and loops on a fixed path; proper
-lane-following / light-obeying AI, collisions, and a real road network are the rest of M2.
-Voice is still on-screen text — on-device text-to-speech (`AVSpeechSynthesizer`) arrives
-with the iPhone build.
+Still to wire in: **following distance** (needs a moving lead car) and the **4-way stop**
+(needs multi-car right-of-way). Traffic is currently visual-only and loops on a fixed path;
+proper lane-following / light-obeying AI, collisions, and a real road network are the rest
+of M2. Voice is still on-screen text — on-device text-to-speech (`AVSpeechSynthesizer`)
+arrives with the iPhone build.

@@ -66,6 +66,48 @@ namespace DrivingMadeEasy.Coaching
                     postHoc: "Failure to yield the right-of-way.",
                     "yield_sign")));
 
+            r.Add(new RuleDefinition(
+                id: "traffic_light", category: "right_of_way", title: "Traffic light",
+                severity: RuleSeverity.Severe,
+                penalty: new RulePenalty(points: 25, fine: 490),
+                guidance: new RuleGuidance(
+                    preempt: "Red light ahead — come to a complete stop before the line and wait for green.",
+                    correction: "You went on red — always stop and wait for the green.",
+                    encourage: "Good — you stopped and waited for green.",
+                    postHoc: "Ran a red light.",
+                    "traffic_light", "stop_line")));
+
+            r.Add(new RuleDefinition(
+                id: "school_zone", category: "speed", title: "School zone",
+                severity: RuleSeverity.Major,
+                penalty: new RulePenalty(points: 15, fine: 350),
+                guidance: new RuleGuidance(
+                    preempt: "School zone — slow to 15 and watch for children.",
+                    correction: "Too fast for a school zone — ease down to 15 through here.",
+                    encourage: "Good — nice and slow through the school zone.",
+                    postHoc: "Exceeded the school-zone speed limit.",
+                    "school_zone_sign")));
+
+            r.Add(new RuleDefinition(
+                id: "lane_keeping", category: "lane", title: "Lane keeping",
+                severity: RuleSeverity.Major,
+                penalty: new RulePenalty(points: 10, fine: 238),
+                guidance: new RuleGuidance(
+                    preempt: "Keep to your lane — don't let the car drift across the lines.",
+                    correction: "You drifted out of your lane — keep the car centered.",
+                    encourage: "Good lane discipline.",
+                    postHoc: "Drifted out of the lane / off the road.")));
+
+            r.Add(new RuleDefinition(
+                id: "following_distance", category: "lane", title: "Following distance",
+                severity: RuleSeverity.Major,
+                penalty: new RulePenalty(points: 10, fine: 238),
+                guidance: new RuleGuidance(
+                    preempt: "Keep back — leave a safe gap to the car ahead.",
+                    correction: "You were tailgating — drop back to about a two-second gap.",
+                    encourage: "Good — safe following distance.",
+                    postHoc: "Followed too closely (tailgating).")));
+
             return r;
         }
     }
