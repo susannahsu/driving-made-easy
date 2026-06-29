@@ -43,6 +43,12 @@ namespace DrivingMadeEasy.Input
         [Tooltip("On-device: bottom-right of the screen is gas, bottom-left is brake.")]
         public bool useTouchPedals = true;
 
+        [Header("Desktop testing only (no gyro)")]
+        [Tooltip("On a laptop with no motion sensor, steer by moving the mouse left/right " +
+                 "across the Game view — continuous, closer to tilting a phone than A/D keys. " +
+                 "On the actual iPhone this is ignored; real tilt steering takes over.")]
+        public bool desktopMouseSteering = true;
+
         public float Steering { get; private set; }
         public float Throttle { get; private set; }
         public float Brake { get; private set; }
@@ -73,7 +79,7 @@ namespace DrivingMadeEasy.Input
 
         private void Update()
         {
-            float targetSteer = _gyroAvailable ? ReadTiltSteering() : ReadKeyboardSteering();
+            float targetSteer = _gyroAvailable ? ReadTiltSteering() : ReadDesktopSteering();
 
             // Smoothly chase the target so raw sensor noise / key taps don't feel twitchy.
             // Caster-like assist: chase faster when returning toward straight than when
@@ -121,10 +127,20 @@ namespace DrivingMadeEasy.Input
             return shaped;
         }
 
-        private float ReadKeyboardSteering()
+        private float ReadDesktopSteering()
         {
-            // Editor / desktop fallback so steering can be iterated without a phone.
-            return UnityEngine.Input.GetAxisRaw("Horizontal");
+            // Keyboard always works as a fallback.
+            float keyboard = UnityEngine.Input.GetAxisRaw("Horizontal");
+            if (!desktopMouseSteering || Mathf.Abs(keyboard) > 0.01f)
+            {
+                return keyboard;
+            }
+
+            // Otherwise steer by mouse X across the Game view: an analog, continuous
+            // stand-in for tilting the phone. Center of the view = straight ahead.
+            float fromCenter = (UnityEngine.Input.mousePosition.x - Screen.width * 0.5f)
+                               / (Screen.width * 0.5f);
+            return Mathf.Clamp(fromCenter, -1f, 1f);
         }
 
         private void ReadPedals()

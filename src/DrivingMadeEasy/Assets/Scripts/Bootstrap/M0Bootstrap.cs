@@ -156,8 +156,9 @@ namespace DrivingMadeEasy.Bootstrap
                 camGo.AddComponent<AudioListener>();
             }
 
-            var chase = cam.gameObject.AddComponent<ChaseCamera>();
-            chase.target = carTransform;
+            var driverCam = cam.gameObject.AddComponent<DriverCamera>();
+            driverCam.target = carTransform;
+            driverCam.view = DriverCamera.View.Cockpit; // start in the driver's seat
 
             var hud = new GameObject("HUD").AddComponent<DrivingHud>();
             hud.car = carTransform.GetComponent<CarController>();

@@ -38,8 +38,16 @@ src/DrivingMadeEasy/
    - **W / S** (or ↑/↓) = gas / brake
    - hold **R** = reverse
 
+Steering also responds to the **mouse**: move it left/right across the Game view for
+continuous, analog steering (a closer stand-in for tilting a phone than the A/D keys).
+Press **C** to toggle between the **cockpit** (driver's-seat) and **chase** views.
+
 This lets you tune steering feel (sensitivity curve, dead zone, responsiveness — all
 exposed on the `MotionSteeringInput` component) before ever touching a phone.
+
+> **Real tilt steering** (moving the phone like a wheel) only runs on the actual iPhone,
+> which has the motion sensor. The keyboard/mouse here are desktop stand-ins; the phone
+> build automatically switches to gyro-based steering.
 
 ## Run it on your iPhone
 
