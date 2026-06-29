@@ -30,10 +30,12 @@ namespace DrivingMadeEasy.Bootstrap
         private void Start()
         {
             BuildGround();
+            BuildRoad();
             GameObject car = BuildCar(new Vector3(0f, 0.6f, -20f));
             BuildCamera(car.transform);
             CoachRuntime coach = BuildCoach();
             BuildStopSign(coach);
+            BuildSpeedZone(coach);
             BuildCones();
         }
 
@@ -168,15 +170,53 @@ namespace DrivingMadeEasy.Bootstrap
             hud.driverInputSource = carTransform.GetComponent<MotionSteeringInput>();
         }
 
+        // ---- Road (M2 scaffolding) -------------------------------------------------
+
+        private void BuildRoad()
+        {
+            // A straight asphalt strip painted on the lot so it reads as a street. Purely
+            // visual — the car still drives on the ground plane's collider.
+            var road = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            road.name = "Road";
+            road.transform.localScale = new Vector3(7f, 0.04f, 170f);
+            road.transform.position = new Vector3(0f, 0.02f, 50f);
+            road.GetComponent<Renderer>().material.color = new Color(0.12f, 0.12f, 0.13f);
+            Destroy(road.GetComponent<BoxCollider>());
+
+            for (int s = -1; s <= 1; s += 2)
+            {
+                var edge = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                edge.name = "RoadEdge";
+                edge.transform.localScale = new Vector3(0.15f, 0.05f, 170f);
+                edge.transform.position = new Vector3(3.3f * s, 0.05f, 50f);
+                edge.GetComponent<Renderer>().material.color = Color.white;
+                Destroy(edge.GetComponent<BoxCollider>());
+            }
+
+            for (int i = 0; i < 28; i++)
+            {
+                var dash = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                dash.name = "CenterDash";
+                dash.transform.localScale = new Vector3(0.15f, 0.05f, 2f);
+                dash.transform.position = new Vector3(0f, 0.05f, -30f + i * 6f);
+                dash.GetComponent<Renderer>().material.color = new Color(0.9f, 0.85f, 0.2f);
+                Destroy(dash.GetComponent<BoxCollider>());
+            }
+        }
+
         // ---- Coach + stop sign (M1) ------------------------------------------------
 
         private CoachRuntime BuildCoach()
         {
             var go = new GameObject("Coach");
             var runtime = go.AddComponent<CoachRuntime>();
+
             var hud = go.AddComponent<CoachHud>();
             hud.coach = runtime;          // CoachHud subscribes in Start(), after this runs
             hud.trackedRuleId = "stop_sign";
+
+            var report = go.AddComponent<DriveReportHud>();
+            report.coach = runtime;
             return runtime;
         }
 
@@ -218,6 +258,39 @@ namespace DrivingMadeEasy.Bootstrap
             zone.ruleId = "stop_sign";
         }
 
+        private void BuildSpeedZone(CoachRuntime coach)
+        {
+            const int limitMph = 20;
+            const float zSign = 2f;       // posted limit sign
+            const float zCenter = 20f;    // middle of the enforced stretch
+            const float zLength = 36f;    // stretch spans ~z 2..38 — long enough to manage speed
+
+            var pole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            pole.name = "SpeedSignPole";
+            pole.transform.localScale = new Vector3(0.1f, 1.0f, 0.1f);
+            pole.transform.position = new Vector3(2.4f, 1.0f, zSign);
+            pole.GetComponent<Renderer>().material.color = new Color(0.3f, 0.3f, 0.3f);
+            Destroy(pole.GetComponent<CapsuleCollider>());
+
+            // White "speed limit" sign (the number is read out by the Coach + HUD for now).
+            var sign = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            sign.name = "SpeedLimitSign";
+            sign.transform.localScale = new Vector3(0.6f, 0.8f, 0.08f);
+            sign.transform.position = new Vector3(2.4f, 1.95f, zSign);
+            sign.GetComponent<Renderer>().material.color = new Color(0.95f, 0.95f, 0.95f);
+            Destroy(sign.GetComponent<BoxCollider>());
+
+            var zoneGo = new GameObject("SpeedZone");
+            zoneGo.transform.position = new Vector3(0f, 1f, zCenter);
+            var box = zoneGo.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(6f, 3f, zLength);
+            var zone = zoneGo.AddComponent<SpeedZone>();
+            zone.coach = coach;
+            zone.ruleId = "speed_limit";
+            zone.limitMph = limitMph;
+        }
+
         // ---- Cones -----------------------------------------------------------------
 
         private void BuildCones()
@@ -229,8 +302,8 @@ namespace DrivingMadeEasy.Bootstrap
                 cone.name = $"Cone_{i}";
                 cone.transform.localScale = new Vector3(0.4f, 0.5f, 0.4f);
                 float x = (i % 2 == 0) ? -1.5f : 1.5f; // weave left/right for a slalom
-                // Start the slalom past the stop line so the stop sign is met first.
-                cone.transform.position = new Vector3(x, 0.5f, 8f + i * coneSpacing);
+                // Start the slalom past the stop sign and speed-limit stretch.
+                cone.transform.position = new Vector3(x, 0.5f, 46f + i * coneSpacing);
                 cone.GetComponent<Renderer>().material.color = new Color(1f, 0.5f, 0f);
                 cones.Add(cone);
             }

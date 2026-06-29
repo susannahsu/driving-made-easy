@@ -56,9 +56,23 @@ The key design point (SPEC §8.2): the **engine decides** guide-vs-silent-vs-pen
 it's a deterministic function of `(rule, player state, pass/fail, difficulty)` — which is
 exactly what makes it testable without the game running.
 
-## What's next (toward M2)
+## Also in (early M2 scaffolding)
 
-Only the **stop sign** is placed in the world so far; `speed_limit`, `turn_signal`, and
-`yield` are defined and tested but get their in-world detection as we build the real
-residential environment (Lesson 1). Voice is still on-screen text — on-device
-text-to-speech (`AVSpeechSynthesizer`) arrives with the iPhone build.
+- **A road**: a straight asphalt strip with edge lines and a dashed center line, so the
+  lot reads as a street. Signs and zones are laid out along it in sequence.
+- **Speed-limit rule, in-world**: a posted limit sign + a `SpeedZone` that watches your
+  speed the whole way through and coaches/enforces just like the stop sign. The active
+  limit shows on the HUD ("Limit: 20 mph").
+- **End-of-drive report**: press **Tab** to finish a drive and see your safety score, the
+  tickets you collected (with the explanations the Coach held back during the drive), and
+  which rules you graduated. "Drive again" resets the score but keeps what you've learned.
+- **Persistence**: your coaching progress is saved to disk, so the Coach remembers which
+  rules you've already mastered between drives and app launches. Reset it any time via
+  **Tools ▸ Driving Made Easy ▸ Reset Coaching Progress**.
+
+## What's next (toward a full Lesson 1)
+
+`turn_signal` and `yield` are defined and tested in the engine but still need their
+in-world detection (which arrives with turning intersections and traffic). Pedestrians,
+traffic, and a proper road network are the rest of M2. Voice is still on-screen text —
+on-device text-to-speech (`AVSpeechSynthesizer`) arrives with the iPhone build.

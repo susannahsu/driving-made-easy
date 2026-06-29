@@ -80,6 +80,15 @@ namespace DrivingMadeEasy.Game
                     coach.StatusLine(trackedRuleId), statusStyle);
             }
 
+            // Active posted speed limit (top-left, below the speedometer/steer readouts).
+            if (coach != null && coach.CurrentSpeedLimitMph > 0)
+            {
+                var limitStyle = new GUIStyle(GUI.skin.box)
+                    { fontSize = 18, alignment = TextAnchor.MiddleCenter };
+                GUI.Box(new Rect(16, 120, 180, 40),
+                    $"Limit: {coach.CurrentSpeedLimitMph} mph", limitStyle);
+            }
+
             if (Time.time < _bannerUntil && !string.IsNullOrEmpty(_banner))
             {
                 var bannerStyle = new GUIStyle(GUI.skin.box)

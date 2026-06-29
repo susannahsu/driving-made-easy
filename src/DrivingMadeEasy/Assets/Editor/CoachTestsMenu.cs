@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 using DrivingMadeEasy.Coaching;
+using DrivingMadeEasy.Game;
 
 namespace DrivingMadeEasy.EditorTools
 {
@@ -30,6 +31,13 @@ namespace DrivingMadeEasy.EditorTools
                 }
             }
             Debug.Log($"Coach tests: {passed}/{results.Count} passed.");
+        }
+
+        [MenuItem("Tools/Driving Made Easy/Reset Coaching Progress")]
+        public static void ResetProgress()
+        {
+            ProfileStore.Clear();
+            Debug.Log("Coaching progress cleared — the Coach will teach every rule from scratch again.");
         }
     }
 }

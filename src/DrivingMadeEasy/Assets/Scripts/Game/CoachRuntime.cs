@@ -25,9 +25,14 @@ namespace DrivingMadeEasy.Game
 
         public DriveSession Session => _session;
 
+        /// The speed limit (mph) of the zone the car is currently in; 0 when none. Set by
+        /// SpeedZone and shown on the HUD.
+        public int CurrentSpeedLimitMph { get; set; }
+
         private void Awake()
         {
-            _profile = new PlayerProfile();
+            // Load persisted progress so the Coach remembers what you've already learned.
+            _profile = ProfileStore.Load();
             _session = new DriveSession();
 
             DifficultySettings diff;
@@ -40,6 +45,12 @@ namespace DrivingMadeEasy.Game
             _coach = new Coach(CaliforniaRules.BuildRegistry(), _profile, diff);
         }
 
+        /// Start a fresh drive (new score/tickets) while keeping learned progress.
+        public void ResetDrive()
+        {
+            _session = new DriveSession();
+        }
+
         public void NotifyRelevant(string ruleId)
         {
             var cue = _coach.OnRelevant(ruleId);
@@ -50,6 +61,7 @@ namespace DrivingMadeEasy.Game
         {
             var outcome = _coach.OnEvaluated(ruleId, passed);
             _session.Apply(outcome);
+            ProfileStore.Save(_profile); // persist learned progress after every encounter
             Outcome?.Invoke(outcome);
         }
 
