@@ -84,10 +84,18 @@ exactly what makes it testable without the game running.
 The drive now runs as a little course: **stop sign → 20 mph stretch → pedestrian
 crosswalk → cross-traffic junction → cone slalom**.
 
+- **Turn signals, in-world**: blinkers (Q/E on desktop) with a dashboard tell-tale and
+  real-style auto-cancel after a turn. A `TurnZone` over the junction detects whether you
+  actually turned and checks you signaled that direction — the `turn_signal` rule. Driving
+  straight through is a no-event.
+
+The course now exercises **5 in-world rules**: stop sign, speed limit, crosswalk yield,
+cross-traffic yield, and turn signal.
+
 ## What's next (toward a full Lesson 1)
 
-`turn_signal` is defined and tested in the engine but still needs blinker input + turn
-detection (the next step). Traffic is currently visual-only and loops on a fixed path;
-proper lane-following / light-obeying AI, collisions, and a real road network are the rest
-of M2. Voice is still on-screen text — on-device text-to-speech (`AVSpeechSynthesizer`)
-arrives with the iPhone build.
+Still to wire in: traffic lights, 4-way stops, lane-keeping, following distance, and a
+school zone. Traffic is currently visual-only and loops on a fixed path; proper
+lane-following / light-obeying AI, collisions, and a real road network are the rest of M2.
+Voice is still on-screen text — on-device text-to-speech (`AVSpeechSynthesizer`) arrives
+with the iPhone build.

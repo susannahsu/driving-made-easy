@@ -37,6 +37,8 @@ src/DrivingMadeEasy/
    - **A / D** (or ←/→) = steer
    - **W / S** (or ↑/↓) = gas / brake
    - hold **R** = reverse
+   - **Q / E** = left / right turn signal (auto-cancels after a turn)
+   - **C** = toggle cockpit / chase view
 
 Steering also responds to the **mouse**: move it left/right across the Game view for
 continuous, analog steering (a closer stand-in for tilting a phone than the A/D keys).

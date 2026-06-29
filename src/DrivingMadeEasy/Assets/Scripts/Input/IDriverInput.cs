@@ -1,5 +1,7 @@
 namespace DrivingMadeEasy.Input
 {
+    public enum TurnSignal { None, Left, Right }
+
     /// <summary>
     /// Abstraction over "where driver intent comes from" so the vehicle never cares
     /// whether it is being driven by phone tilt, on-screen pedals, keyboard (editor),
@@ -7,6 +9,9 @@ namespace DrivingMadeEasy.Input
     /// </summary>
     public interface IDriverInput
     {
+        /// <summary>Which turn signal (blinker) is currently on.</summary>
+        TurnSignal Signal { get; }
+
         /// <summary>Steering intent in [-1, 1]. -1 = full left, +1 = full right.</summary>
         float Steering { get; }
 

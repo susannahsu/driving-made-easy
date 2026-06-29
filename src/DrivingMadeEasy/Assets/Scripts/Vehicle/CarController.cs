@@ -52,6 +52,7 @@ namespace DrivingMadeEasy.Vehicle
         public float SpeedMetersPerSecond { get; private set; }
         public float SpeedMph => SpeedMetersPerSecond * 2.2369f;
         public float SteeringValue => _input?.Steering ?? 0f;
+        public TurnSignal Signal => _input?.Signal ?? TurnSignal.None;
 
         private void Awake()
         {

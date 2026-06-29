@@ -53,6 +53,11 @@ namespace DrivingMadeEasy.Input
         public float Throttle { get; private set; }
         public float Brake { get; private set; }
         public bool Reverse { get; private set; }
+        public TurnSignal Signal { get; private set; }
+
+        // Auto-cancel bookkeeping: once you've actually turned (steering swung past a
+        // threshold) and then straightened out, the blinker switches itself off.
+        private bool _steeredHard;
 
         // Calibration: the device attitude captured as "straight ahead".
         private Quaternion _neutralAttitude = Quaternion.identity;
@@ -95,6 +100,26 @@ namespace DrivingMadeEasy.Input
             Steering = Mathf.Clamp(Steering, -1f, 1f);
 
             ReadPedals();
+            ReadTurnSignal();
+        }
+
+        private void ReadTurnSignal()
+        {
+            // Desktop: Q toggles left, E toggles right (press again, or the opposite, to
+            // cancel). On device this will become an edge swipe later.
+            if (UnityEngine.Input.GetKeyDown(KeyCode.Q))
+                Signal = Signal == TurnSignal.Left ? TurnSignal.None : TurnSignal.Left;
+            if (UnityEngine.Input.GetKeyDown(KeyCode.E))
+                Signal = Signal == TurnSignal.Right ? TurnSignal.None : TurnSignal.Right;
+
+            // Auto-cancel like a real wheel: after a real turn (hard steer) you straighten
+            // out, and the blinker clicks off.
+            if (Mathf.Abs(Steering) > 0.45f) _steeredHard = true;
+            if (_steeredHard && Mathf.Abs(Steering) < 0.1f)
+            {
+                Signal = TurnSignal.None;
+                _steeredHard = false;
+            }
         }
 
         private float ReadTiltSteering()

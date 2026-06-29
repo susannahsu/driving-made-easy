@@ -751,6 +751,17 @@ namespace DrivingMadeEasy.Bootstrap
             zone.conflictCenter = new Vector3(0f, 0.4f, zCross);
             zone.conflictRadius = 9f;
             zone.ruleId = "yield";
+
+            // Turn-signal zone over the junction itself: if you turn onto the cross street,
+            // the Coach checks you signaled. Going straight through is a no-event.
+            var turnGo = new GameObject("TurnZone");
+            turnGo.transform.position = new Vector3(0f, 1f, zCross);
+            var turnBox = turnGo.AddComponent<BoxCollider>();
+            turnBox.isTrigger = true;
+            turnBox.size = new Vector3(12f, 3f, 12f);
+            var turn = turnGo.AddComponent<TurnZone>();
+            turn.coach = coach;
+            turn.ruleId = "turn_signal";
         }
 
         // ---- Cones -----------------------------------------------------------------
