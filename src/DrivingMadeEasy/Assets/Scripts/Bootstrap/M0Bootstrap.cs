@@ -29,8 +29,10 @@ namespace DrivingMadeEasy.Bootstrap
 
         private void Start()
         {
+            ConfigureLighting();
             BuildGround();
             BuildRoad();
+            BuildScenery();
             GameObject car = BuildCar(new Vector3(0f, 0.6f, -20f));
             BuildCamera(car.transform);
             CoachRuntime coach = BuildCoach();
@@ -41,22 +43,145 @@ namespace DrivingMadeEasy.Bootstrap
             BuildCones();
         }
 
+        // ---- Visual helpers --------------------------------------------------------
+
+        /// A Standard-shader material (Built-in RP) with optional metallic / smoothness /
+        /// emission, so props read as real surfaces instead of flat-shaded primitives.
+        private static Material Mat(Color color, float metallic = 0f, float smoothness = 0.25f,
+                                    Color? emission = null)
+        {
+            var m = new Material(Shader.Find("Standard"));
+            m.color = color;
+            m.SetFloat("_Metallic", metallic);
+            m.SetFloat("_Glossiness", smoothness);
+            if (emission.HasValue)
+            {
+                m.EnableKeyword("_EMISSION");
+                m.SetColor("_EmissionColor", emission.Value);
+                m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
+            return m;
+        }
+
+        /// A colliderless cube with a given material (world space) — the scenery workhorse.
+        private GameObject Box(string name, Vector3 pos, Vector3 scale, Material mat)
+        {
+            var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            g.name = name;
+            g.transform.position = pos;
+            g.transform.localScale = scale;
+            g.GetComponent<Renderer>().sharedMaterial = mat;
+            Destroy(g.GetComponent<BoxCollider>());
+            return g;
+        }
+
+        /// A colliderless child cube placed in a parent's local space (e.g. car parts).
+        private void AddPart(Transform parent, string name, Vector3 localPos, Vector3 scale, Material mat)
+        {
+            var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            g.name = name;
+            g.transform.SetParent(parent, false);
+            g.transform.localPosition = localPos;
+            g.transform.localScale = scale;
+            g.GetComponent<Renderer>().sharedMaterial = mat;
+            Destroy(g.GetComponent<BoxCollider>());
+        }
+
+        // ---- Lighting & sky --------------------------------------------------------
+
+        private void ConfigureLighting()
+        {
+            // A warm directional "sun" with soft shadows — the single biggest realism win.
+            Light sun = null;
+            foreach (var l in FindObjectsOfType<Light>())
+                if (l.type == LightType.Directional) { sun = l; break; }
+            if (sun == null)
+            {
+                sun = new GameObject("Sun").AddComponent<Light>();
+                sun.type = LightType.Directional;
+            }
+            sun.transform.rotation = Quaternion.Euler(48f, -28f, 0f);
+            sun.color = new Color(1f, 0.96f, 0.86f);
+            sun.intensity = 1.15f;
+            sun.shadows = LightShadows.Soft;
+
+            // Sky-toned ambient + gentle distance fog for depth.
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(0.55f, 0.62f, 0.72f);
+            RenderSettings.ambientEquatorColor = new Color(0.46f, 0.48f, 0.46f);
+            RenderSettings.ambientGroundColor = new Color(0.24f, 0.26f, 0.22f);
+            RenderSettings.fog = true;
+            RenderSettings.fogColor = new Color(0.74f, 0.8f, 0.86f);
+            RenderSettings.fogMode = FogMode.Linear;
+            RenderSettings.fogStartDistance = 70f;
+            RenderSettings.fogEndDistance = 240f;
+        }
+
+        // ---- Scenery (sidewalks, buildings, trees) ---------------------------------
+
+        private void BuildScenery()
+        {
+            var sidewalkMat = Mat(new Color(0.62f, 0.62f, 0.62f), 0f, 0.1f);
+            for (int s = -1; s <= 1; s += 2)
+                Box("Sidewalk", new Vector3(4.6f * s, 0.06f, 50f), new Vector3(2.2f, 0.12f, 170f), sidewalkMat);
+
+            var trunkMat = Mat(new Color(0.35f, 0.25f, 0.16f));
+            var leafMat = Mat(new Color(0.24f, 0.45f, 0.22f));
+            var windowMat = Mat(new Color(0.18f, 0.22f, 0.28f), 0.1f, 0.85f,
+                                 new Color(0.22f, 0.25f, 0.2f));
+            Color[] palette =
+            {
+                new Color(0.78f, 0.74f, 0.68f), new Color(0.70f, 0.60f, 0.55f),
+                new Color(0.60f, 0.66f, 0.72f), new Color(0.82f, 0.78f, 0.70f),
+                new Color(0.66f, 0.62f, 0.60f)
+            };
+
+            for (int s = -1; s <= 1; s += 2)
+            {
+                float x = 12f * s;
+                for (int i = 0; i < 12; i++)
+                {
+                    float z = -28f + i * 14f;
+                    if (Mathf.Abs(z - 78f) < 9f) continue; // keep the junction clear
+
+                    if (i % 3 == 1)
+                    {
+                        Box("TreeTrunk", new Vector3(7f * s, 1f, z), new Vector3(0.4f, 2f, 0.4f), trunkMat);
+                        var canopy = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        canopy.name = "TreeCanopy";
+                        canopy.transform.position = new Vector3(7f * s, 2.7f, z);
+                        canopy.transform.localScale = new Vector3(2.4f, 2.6f, 2.4f);
+                        canopy.GetComponent<Renderer>().sharedMaterial = leafMat;
+                        Destroy(canopy.GetComponent<SphereCollider>());
+                    }
+                    else
+                    {
+                        float h = 6f + ((i * 37) % 9); // varied heights, 6..14
+                        var bMat = Mat(palette[(i + (s > 0 ? 2 : 0)) % palette.Length], 0f, 0.2f);
+                        Box("Building", new Vector3(x, h * 0.5f, z), new Vector3(8f, h, 10f), bMat);
+                        // a glassy "windows" band on the street-facing face
+                        Box("Windows", new Vector3(x - 4.05f * s, h * 0.55f, z),
+                            new Vector3(0.1f, h * 0.7f, 8f), windowMat);
+                    }
+                }
+            }
+        }
+
         // ---- Ground ---------------------------------------------------------------
 
         private void BuildGround()
         {
+            // Grass plane, large enough to run beyond the fog so there's no visible edge.
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            ground.name = "ParkingLot";
-            ground.transform.localScale = Vector3.one * (lotSize / 10f); // Plane is 10u
-            ground.GetComponent<Renderer>().material.color = new Color(0.18f, 0.18f, 0.20f);
+            ground.name = "Ground";
+            ground.transform.position = new Vector3(0f, 0f, 50f);
+            ground.transform.localScale = Vector3.one * 32f; // 320 units across
+            ground.GetComponent<Renderer>().sharedMaterial =
+                Mat(new Color(0.34f, 0.45f, 0.27f), 0f, 0.05f);
 
-            // A bright "start" stripe so the player has a reference line.
-            var stripe = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            stripe.name = "StartStripe";
-            stripe.transform.position = new Vector3(0f, 0.02f, -26f);
-            stripe.transform.localScale = new Vector3(10f, 0.02f, 0.4f);
-            stripe.GetComponent<Renderer>().material.color = Color.white;
-            Destroy(stripe.GetComponent<BoxCollider>());
+            // A bright "start" line so the player has a reference to set off from.
+            Box("StartLine", new Vector3(0f, 0.06f, -26f), new Vector3(7f, 0.04f, 0.4f),
+                Mat(Color.white, 0f, 0.1f));
         }
 
         // ---- Car ------------------------------------------------------------------
@@ -66,14 +191,23 @@ namespace DrivingMadeEasy.Bootstrap
             var car = new GameObject("Car");
             car.transform.position = position;
 
-            var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            body.name = "Body";
-            body.transform.SetParent(car.transform, false);
-            body.transform.localScale = new Vector3(1.8f, 0.8f, 4.2f);
-            body.GetComponent<Renderer>().material.color = new Color(0.85f, 0.2f, 0.2f);
-            Destroy(body.GetComponent<BoxCollider>()); // the Rigidbody uses wheel + a hull collider
+            // Visuals: a glossy painted lower body, a tinted-glass cabin, and lights.
+            var paint = Mat(new Color(0.78f, 0.12f, 0.12f), 0.5f, 0.6f);
+            var glass = Mat(new Color(0.08f, 0.1f, 0.13f), 0.2f, 0.9f);
+            var headMat = Mat(new Color(1f, 0.97f, 0.85f), 0f, 0.9f, new Color(1f, 0.95f, 0.7f));
+            var tailMat = Mat(new Color(0.5f, 0.05f, 0.05f), 0f, 0.9f, new Color(0.7f, 0.05f, 0.05f));
 
-            var hull = car.AddComponent<BoxCollider>();
+            AddPart(car.transform, "Body", new Vector3(0f, 0.05f, 0f), new Vector3(1.8f, 0.7f, 4.2f), paint);
+            AddPart(car.transform, "Cabin", new Vector3(0f, 0.55f, -0.2f), new Vector3(1.6f, 0.6f, 2.0f), glass);
+            for (int sx = -1; sx <= 1; sx += 2)
+            {
+                AddPart(car.transform, "Headlight", new Vector3(0.6f * sx, 0.05f, 2.05f),
+                        new Vector3(0.35f, 0.2f, 0.1f), headMat);
+                AddPart(car.transform, "Taillight", new Vector3(0.6f * sx, 0.05f, -2.05f),
+                        new Vector3(0.35f, 0.2f, 0.1f), tailMat);
+            }
+
+            var hull = car.AddComponent<BoxCollider>(); // physics hull (visuals have no colliders)
             hull.center = new Vector3(0f, 0.3f, 0f);
             hull.size = new Vector3(1.8f, 0.8f, 4.2f);
 
@@ -178,32 +312,17 @@ namespace DrivingMadeEasy.Bootstrap
         {
             // A straight asphalt strip painted on the lot so it reads as a street. Purely
             // visual — the car still drives on the ground plane's collider.
-            var road = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            road.name = "Road";
-            road.transform.localScale = new Vector3(7f, 0.04f, 170f);
-            road.transform.position = new Vector3(0f, 0.02f, 50f);
-            road.GetComponent<Renderer>().material.color = new Color(0.12f, 0.12f, 0.13f);
-            Destroy(road.GetComponent<BoxCollider>());
+            var asphalt = Mat(new Color(0.13f, 0.13f, 0.14f), 0.0f, 0.35f);
+            var paintWhite = Mat(new Color(0.92f, 0.92f, 0.92f), 0f, 0.1f);
+            var paintYellow = Mat(new Color(0.92f, 0.82f, 0.2f), 0f, 0.1f);
+
+            Box("Road", new Vector3(0f, 0.02f, 50f), new Vector3(7f, 0.04f, 170f), asphalt);
 
             for (int s = -1; s <= 1; s += 2)
-            {
-                var edge = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                edge.name = "RoadEdge";
-                edge.transform.localScale = new Vector3(0.15f, 0.05f, 170f);
-                edge.transform.position = new Vector3(3.3f * s, 0.05f, 50f);
-                edge.GetComponent<Renderer>().material.color = Color.white;
-                Destroy(edge.GetComponent<BoxCollider>());
-            }
+                Box("RoadEdge", new Vector3(3.3f * s, 0.05f, 50f), new Vector3(0.15f, 0.05f, 170f), paintWhite);
 
             for (int i = 0; i < 28; i++)
-            {
-                var dash = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                dash.name = "CenterDash";
-                dash.transform.localScale = new Vector3(0.15f, 0.05f, 2f);
-                dash.transform.position = new Vector3(0f, 0.05f, -30f + i * 6f);
-                dash.GetComponent<Renderer>().material.color = new Color(0.9f, 0.85f, 0.2f);
-                Destroy(dash.GetComponent<BoxCollider>());
-            }
+                Box("CenterDash", new Vector3(0f, 0.05f, -30f + i * 6f), new Vector3(0.15f, 0.05f, 2f), paintYellow);
         }
 
         // ---- Coach + stop sign (M1) ------------------------------------------------
@@ -308,13 +427,27 @@ namespace DrivingMadeEasy.Bootstrap
                 Destroy(stripe.GetComponent<BoxCollider>());
             }
 
-            // The pedestrian (visual only — the rule is judged by CrosswalkZone).
-            var pedGo = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            pedGo.name = "Pedestrian";
-            pedGo.transform.localScale = new Vector3(0.5f, 0.9f, 0.5f);
-            pedGo.transform.position = new Vector3(-5f, 0.9f, zCross);
-            pedGo.GetComponent<Renderer>().material.color = new Color(0.2f, 0.4f, 0.9f);
-            Destroy(pedGo.GetComponent<CapsuleCollider>());
+            // The pedestrian: a body + head so it reads as a person (visual only — the rule
+            // is judged by CrosswalkZone). The mover sits at ground level; parts give height.
+            var pedGo = new GameObject("Pedestrian");
+            pedGo.transform.position = new Vector3(-5f, 0f, zCross);
+
+            var bodyCap = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            bodyCap.name = "Body";
+            bodyCap.transform.SetParent(pedGo.transform, false);
+            bodyCap.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+            bodyCap.transform.localScale = new Vector3(0.5f, 0.7f, 0.5f);
+            bodyCap.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.2f, 0.4f, 0.85f));
+            Destroy(bodyCap.GetComponent<CapsuleCollider>());
+
+            var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            head.name = "Head";
+            head.transform.SetParent(pedGo.transform, false);
+            head.transform.localPosition = new Vector3(0f, 1.7f, 0f);
+            head.transform.localScale = new Vector3(0.42f, 0.42f, 0.42f);
+            head.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.85f, 0.7f, 0.6f));
+            Destroy(head.GetComponent<SphereCollider>());
+
             var ped = pedGo.AddComponent<Pedestrian>();
 
             var zoneGo = new GameObject("CrosswalkZone");
@@ -342,17 +475,22 @@ namespace DrivingMadeEasy.Bootstrap
 
             // A small fleet streaming east across the junction, spaced so gaps appear.
             var fleet = new List<TrafficCar>();
+            Color[] carColors =
+            {
+                new Color(0.25f, 0.5f, 0.85f), new Color(0.85f, 0.8f, 0.2f),
+                new Color(0.8f, 0.8f, 0.82f), new Color(0.2f, 0.6f, 0.4f)
+            };
             const int n = 4;
             for (int i = 0; i < n; i++)
             {
-                var tc = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                tc.name = $"TrafficCar_{i}";
-                tc.transform.localScale = new Vector3(1.8f, 0.8f, 4.0f);
-                tc.GetComponent<Renderer>().material.color = new Color(0.25f, 0.5f, 0.85f);
-                Destroy(tc.GetComponent<BoxCollider>());
-                var car = tc.AddComponent<TrafficCar>();
-                car.startPoint = new Vector3(-35f, 0.6f, zCross);
-                car.endPoint = new Vector3(35f, 0.6f, zCross);
+                var tcRoot = new GameObject($"TrafficCar_{i}");
+                AddPart(tcRoot.transform, "Body", new Vector3(0f, 0f, 0f),
+                        new Vector3(1.8f, 0.7f, 4.0f), Mat(carColors[i % carColors.Length], 0.4f, 0.6f));
+                AddPart(tcRoot.transform, "Cabin", new Vector3(0f, 0.5f, -0.2f),
+                        new Vector3(1.6f, 0.5f, 1.9f), Mat(new Color(0.08f, 0.1f, 0.13f), 0.2f, 0.9f));
+                var car = tcRoot.AddComponent<TrafficCar>();
+                car.startPoint = new Vector3(-35f, 0.4f, zCross);
+                car.endPoint = new Vector3(35f, 0.4f, zCross);
                 car.speed = 9f;
                 car.startOffset = i / (float)n;
                 fleet.Add(car);
@@ -383,7 +521,7 @@ namespace DrivingMadeEasy.Bootstrap
             var zone = zoneGo.AddComponent<CrossTrafficZone>();
             zone.coach = coach;
             zone.traffic = fleet.ToArray();
-            zone.conflictCenter = new Vector3(0f, 0.6f, zCross);
+            zone.conflictCenter = new Vector3(0f, 0.4f, zCross);
             zone.conflictRadius = 9f;
             zone.ruleId = "yield";
         }
