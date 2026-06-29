@@ -48,14 +48,17 @@ namespace DrivingMadeEasy.Game
 
         private void Update()
         {
+            float phase = Time.time * walkSpeed + phaseOffset;
             float span = Mathf.Max(0.01f, maxA - minA);
-            float val = minA + Mathf.PingPong(Time.time * walkSpeed + phaseOffset, span);
+            float val = minA + Mathf.PingPong(phase, span);
             float delta = val - _prev;
             _prev = val;
 
+            // A subtle vertical bob in time with the stride.
+            float bob = Mathf.Abs(Mathf.Sin(phase * 2.6f)) * 0.025f;
             transform.position = alongZ
-                ? new Vector3(_fixedX, _y, val)
-                : new Vector3(val, _y, _fixedZ);
+                ? new Vector3(_fixedX, _y + bob, val)
+                : new Vector3(val, _y + bob, _fixedZ);
 
             if (Mathf.Abs(delta) > 1e-5f)
             {
@@ -65,7 +68,7 @@ namespace DrivingMadeEasy.Game
                 transform.rotation = Quaternion.LookRotation(fwd, Vector3.up);
             }
 
-            float s = Mathf.Sin((Time.time * walkSpeed + phaseOffset) * 2.6f) * swingDegrees;
+            float s = Mathf.Sin(phase * 2.6f) * swingDegrees;
             float a = s * armSwingScale;
             if (leftLeg) leftLeg.localRotation = Quaternion.Euler(s, 0f, 0f);
             if (rightLeg) rightLeg.localRotation = Quaternion.Euler(-s, 0f, 0f);

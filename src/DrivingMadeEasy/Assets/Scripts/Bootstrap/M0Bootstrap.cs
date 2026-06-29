@@ -107,47 +107,92 @@ namespace DrivingMadeEasy.Bootstrap
 
         // ---- People ----------------------------------------------------------------
 
+        private static readonly Color[] _skinTones =
+        {
+            new Color(0.86f, 0.72f, 0.62f), new Color(0.74f, 0.57f, 0.44f),
+            new Color(0.55f, 0.4f, 0.3f), new Color(0.92f, 0.78f, 0.68f)
+        };
+        private static readonly Color[] _hairTones =
+        {
+            new Color(0.12f, 0.09f, 0.07f), new Color(0.32f, 0.22f, 0.12f),
+            new Color(0.5f, 0.4f, 0.2f), new Color(0.3f, 0.3f, 0.3f)
+        };
+        private int _personSeed;
+
         private Pedestrian BuildPerson(Vector3 pos, Color shirt)
         {
             var root = new GameObject("Pedestrian");
             root.transform.position = pos;
 
-            var skin = Mat(new Color(0.85f, 0.7f, 0.6f));
+            int seed = _personSeed++;
+            var skin = Mat(_skinTones[seed % _skinTones.Length]);
+            var hair = Mat(_hairTones[(seed * 3) % _hairTones.Length]);
             var shirtMat = Mat(shirt);
-            var pantsMat = Mat(new Color(0.2f, 0.2f, 0.25f));
+            var pantsMat = Mat(new Color(0.18f, 0.2f, 0.28f));
+            var shoeMat = Mat(new Color(0.08f, 0.08f, 0.09f));
 
-            AddPart(root.transform, "Torso", new Vector3(0f, 1.15f, 0f),
-                    new Vector3(0.45f, 0.6f, 0.28f), shirtMat);
+            // Hips, a tapered torso, shoulders, and a neck — better human proportions.
+            AddPart(root.transform, "Hips", new Vector3(0f, 0.86f, 0f), new Vector3(0.36f, 0.22f, 0.24f), pantsMat);
+            AddPart(root.transform, "Torso", new Vector3(0f, 1.16f, 0f), new Vector3(0.42f, 0.5f, 0.24f), shirtMat);
+            AddPart(root.transform, "Shoulders", new Vector3(0f, 1.38f, 0f), new Vector3(0.52f, 0.14f, 0.26f), shirtMat);
+            AddPart(root.transform, "Neck", new Vector3(0f, 1.47f, 0f), new Vector3(0.12f, 0.1f, 0.12f), skin);
 
             var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             head.name = "Head";
             head.transform.SetParent(root.transform, false);
-            head.transform.localPosition = new Vector3(0f, 1.66f, 0f);
-            head.transform.localScale = new Vector3(0.34f, 0.36f, 0.34f);
+            head.transform.localPosition = new Vector3(0f, 1.6f, 0f);
+            head.transform.localScale = new Vector3(0.3f, 0.34f, 0.3f);
             head.GetComponent<Renderer>().sharedMaterial = skin;
             Destroy(head.GetComponent<SphereCollider>());
 
+            var cap = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            cap.name = "Hair";
+            cap.transform.SetParent(root.transform, false);
+            cap.transform.localPosition = new Vector3(0f, 1.65f, -0.02f);
+            cap.transform.localScale = new Vector3(0.33f, 0.26f, 0.34f);
+            cap.GetComponent<Renderer>().sharedMaterial = hair;
+            Destroy(cap.GetComponent<SphereCollider>());
+
             var ped = root.AddComponent<Pedestrian>();
-            ped.leftLeg = LimbPivot(root.transform, new Vector3(-0.12f, 0.85f, 0f), pantsMat, 0.5f);
-            ped.rightLeg = LimbPivot(root.transform, new Vector3(0.12f, 0.85f, 0f), pantsMat, 0.5f);
-            ped.leftArm = LimbPivot(root.transform, new Vector3(-0.28f, 1.35f, 0f), shirtMat, 0.45f);
-            ped.rightArm = LimbPivot(root.transform, new Vector3(0.28f, 1.35f, 0f), shirtMat, 0.45f);
+            ped.leftLeg = Limb(root.transform, new Vector3(-0.11f, 0.84f, 0f), 0.82f, 0.14f, pantsMat, shoeMat, true);
+            ped.rightLeg = Limb(root.transform, new Vector3(0.11f, 0.84f, 0f), 0.82f, 0.14f, pantsMat, shoeMat, true);
+            ped.leftArm = Limb(root.transform, new Vector3(-0.28f, 1.34f, 0f), 0.66f, 0.11f, shirtMat, skin, false);
+            ped.rightArm = Limb(root.transform, new Vector3(0.28f, 1.34f, 0f), 0.66f, 0.11f, shirtMat, skin, false);
             return ped;
         }
 
-        private Transform LimbPivot(Transform parent, Vector3 localPos, Material mat, float length)
+        /// A limb that swings from a hip/shoulder pivot, capped with a foot (forward box) or
+        /// a hand (small sphere).
+        private Transform Limb(Transform parent, Vector3 pivotPos, float length, float thick,
+                               Material limbMat, Material endMat, bool foot)
         {
             var pivot = new GameObject("Limb");
             pivot.transform.SetParent(parent, false);
-            pivot.transform.localPosition = localPos;
+            pivot.transform.localPosition = pivotPos;
 
             var seg = GameObject.CreatePrimitive(PrimitiveType.Cube);
             seg.name = "Seg";
             seg.transform.SetParent(pivot.transform, false);
             seg.transform.localPosition = new Vector3(0f, -length * 0.5f, 0f);
-            seg.transform.localScale = new Vector3(0.12f, length, 0.12f);
-            seg.GetComponent<Renderer>().sharedMaterial = mat;
+            seg.transform.localScale = new Vector3(thick, length, thick);
+            seg.GetComponent<Renderer>().sharedMaterial = limbMat;
             Destroy(seg.GetComponent<BoxCollider>());
+
+            var end = GameObject.CreatePrimitive(foot ? PrimitiveType.Cube : PrimitiveType.Sphere);
+            end.name = foot ? "Foot" : "Hand";
+            end.transform.SetParent(pivot.transform, false);
+            if (foot)
+            {
+                end.transform.localPosition = new Vector3(0f, -length, 0.09f);
+                end.transform.localScale = new Vector3(thick, 0.09f, 0.3f);
+            }
+            else
+            {
+                end.transform.localPosition = new Vector3(0f, -length, 0f);
+                end.transform.localScale = new Vector3(thick * 1.15f, thick * 1.15f, thick * 1.15f);
+            }
+            end.GetComponent<Renderer>().sharedMaterial = endMat;
+            Destroy(end.GetComponent<Collider>());
             return pivot.transform;
         }
 
@@ -404,6 +449,46 @@ namespace DrivingMadeEasy.Bootstrap
             AddPart(car, "Binnacle", new Vector3(-0.32f, 0.46f, 0.72f), new Vector3(0.56f, 0.18f, 0.26f), trim);
             Cyl(car, "Gauge", new Vector3(-0.45f, 0.49f, 0.6f), new Vector3(0.14f, 0.02f, 0.14f), new Vector3(80f, 0f, 0f), gaugeMat);
             Cyl(car, "Gauge", new Vector3(-0.19f, 0.49f, 0.6f), new Vector3(0.14f, 0.02f, 0.14f), new Vector3(80f, 0f, 0f), gaugeMat);
+
+            // Side mirrors, glimpsed out the side windows.
+            AddPart(car, "SideMirrorL", new Vector3(-0.97f, 0.6f, 0.7f), new Vector3(0.07f, 0.14f, 0.16f), trim);
+            AddPart(car, "SideMirrorR", new Vector3(0.97f, 0.6f, 0.7f), new Vector3(0.07f, 0.14f, 0.16f), trim);
+        }
+
+        // ---- Reusable car shell (traffic + parked cars) ----------------------------
+
+        /// Builds a believable car body (greenhouse, roof, bumpers, grille, lights, mirrors,
+        /// wheels) under a root transform, in local space. Used for traffic cars.
+        private void AddCarShell(Transform root, Color paintColor)
+        {
+            var paint = Mat(paintColor, 0.45f, 0.6f);
+            var glass = Mat(new Color(0.1f, 0.12f, 0.16f), 0.3f, 0.9f);
+            var dark = Mat(new Color(0.06f, 0.06f, 0.07f), 0.2f, 0.4f);
+            var headMat = Mat(new Color(1f, 0.97f, 0.85f), 0f, 0.9f, new Color(1f, 0.95f, 0.7f));
+            var tailMat = Mat(new Color(0.5f, 0.05f, 0.05f), 0f, 0.9f, new Color(0.7f, 0.05f, 0.05f));
+            var tyre = Mat(new Color(0.05f, 0.05f, 0.06f), 0f, 0.3f);
+
+            AddPart(root, "Body", new Vector3(0f, 0.05f, 0f), new Vector3(1.8f, 0.5f, 4.2f), paint);
+            AddPart(root, "Hood", new Vector3(0f, 0.3f, 1.3f), new Vector3(1.7f, 0.12f, 1.4f), paint);
+            AddPart(root, "Trunk", new Vector3(0f, 0.32f, -1.5f), new Vector3(1.7f, 0.14f, 0.9f), paint);
+            AddPart(root, "Cabin", new Vector3(0f, 0.62f, -0.1f), new Vector3(1.55f, 0.5f, 1.9f), glass);
+            AddPart(root, "Roof", new Vector3(0f, 0.86f, -0.15f), new Vector3(1.45f, 0.08f, 1.7f), paint);
+            AddPart(root, "FrontBumper", new Vector3(0f, 0.02f, 2.05f), new Vector3(1.85f, 0.28f, 0.22f), dark);
+            AddPart(root, "RearBumper", new Vector3(0f, 0.02f, -2.05f), new Vector3(1.85f, 0.28f, 0.22f), dark);
+            AddPart(root, "Grille", new Vector3(0f, 0.12f, 2.12f), new Vector3(1.0f, 0.18f, 0.05f), dark);
+
+            for (int sx = -1; sx <= 1; sx += 2)
+            {
+                AddPart(root, "Headlight", new Vector3(0.62f * sx, 0.18f, 2.1f), new Vector3(0.34f, 0.16f, 0.06f), headMat);
+                AddPart(root, "Taillight", new Vector3(0.62f * sx, 0.2f, -2.08f), new Vector3(0.34f, 0.18f, 0.06f), tailMat);
+                AddPart(root, "MirrorArm", new Vector3(0.92f * sx, 0.6f, 0.85f), new Vector3(0.14f, 0.05f, 0.05f), dark);
+                AddPart(root, "SideMirror", new Vector3(1.02f * sx, 0.64f, 0.82f), new Vector3(0.06f, 0.14f, 0.16f), dark);
+            }
+
+            for (int wx = -1; wx <= 1; wx += 2)
+                for (int wz = -1; wz <= 1; wz += 2)
+                    Cyl(root, "Wheel", new Vector3(0.85f * wx, -0.18f, 1.35f * wz),
+                        new Vector3(0.5f, 0.14f, 0.5f), new Vector3(0f, 0f, 90f), tyre);
         }
 
         private (WheelCollider collider, Transform mesh) BuildWheel(
@@ -629,15 +714,7 @@ namespace DrivingMadeEasy.Bootstrap
             for (int i = 0; i < n; i++)
             {
                 var tcRoot = new GameObject($"TrafficCar_{i}");
-                AddPart(tcRoot.transform, "Body", new Vector3(0f, 0f, 0f),
-                        new Vector3(1.8f, 0.7f, 4.0f), Mat(carColors[i % carColors.Length], 0.4f, 0.6f));
-                AddPart(tcRoot.transform, "Cabin", new Vector3(0f, 0.5f, -0.2f),
-                        new Vector3(1.6f, 0.5f, 1.9f), Mat(new Color(0.08f, 0.1f, 0.13f), 0.2f, 0.9f));
-                var tyre = Mat(new Color(0.05f, 0.05f, 0.06f), 0f, 0.3f);
-                for (int wx = -1; wx <= 1; wx += 2)
-                    for (int wz = -1; wz <= 1; wz += 2)
-                        Cyl(tcRoot.transform, "Wheel", new Vector3(0.9f * wx, -0.3f, 1.3f * wz),
-                            new Vector3(0.32f, 0.12f, 0.32f), new Vector3(0f, 0f, 90f), tyre);
+                AddCarShell(tcRoot.transform, carColors[i % carColors.Length]);
                 var car = tcRoot.AddComponent<TrafficCar>();
                 car.startPoint = new Vector3(-35f, 0.4f, zCross);
                 car.endPoint = new Vector3(35f, 0.4f, zCross);
