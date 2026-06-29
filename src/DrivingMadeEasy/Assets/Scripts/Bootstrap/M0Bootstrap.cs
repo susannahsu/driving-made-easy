@@ -152,15 +152,15 @@ namespace DrivingMadeEasy.Bootstrap
 
         private void BuildSteeringWheel(Transform car, CarController controller)
         {
-            // Mounted above the body top (~0.40) so it isn't buried in the chassis, and in
-            // front of the driver's seat so the cockpit camera frames it.
+            // A smallish, near-upright wheel in the lower third of the cockpit view (like a
+            // driving-game cockpit), mounted above the hood and facing the driver.
             var pivot = new GameObject("SteeringWheel");
             pivot.transform.SetParent(car, false);
-            pivot.transform.localPosition = new Vector3(-0.32f, 0.58f, 0.5f);
-            pivot.transform.localRotation = Quaternion.Euler(-68f, 0f, 0f);
+            pivot.transform.localPosition = new Vector3(-0.32f, 0.5f, 0.5f);
+            pivot.transform.localRotation = Quaternion.Euler(-160f, 0f, 0f); // ~20° back from vertical
 
             var plastic = Mat(new Color(0.08f, 0.08f, 0.09f), 0.2f, 0.5f);
-            const float R = 0.2f;
+            const float R = 0.17f;
             const int seg = 16;
             for (int i = 0; i < seg; i++)
             {
@@ -190,8 +190,8 @@ namespace DrivingMadeEasy.Bootstrap
             Cyl(pivot.transform, "Hub", Vector3.zero, new Vector3(0.08f, 0.02f, 0.08f),
                 new Vector3(90f, 0f, 0f), plastic);
 
-            // Dashboard slab just ahead of the wheel, above the body top so it's in view.
-            AddPart(car, "Dashboard", new Vector3(0f, 0.5f, 0.95f), new Vector3(1.7f, 0.3f, 0.5f),
+            // A low dashboard strip ahead of the wheel.
+            AddPart(car, "Dashboard", new Vector3(0f, 0.34f, 0.85f), new Vector3(1.7f, 0.22f, 0.5f),
                     Mat(new Color(0.12f, 0.12f, 0.13f), 0.1f, 0.3f));
 
             pivot.AddComponent<SteeringWheelView>().car = controller;
@@ -326,7 +326,7 @@ namespace DrivingMadeEasy.Bootstrap
             var headMat = Mat(new Color(1f, 0.97f, 0.85f), 0f, 0.9f, new Color(1f, 0.95f, 0.7f));
             var tailMat = Mat(new Color(0.5f, 0.05f, 0.05f), 0f, 0.9f, new Color(0.7f, 0.05f, 0.05f));
 
-            AddPart(car.transform, "Body", new Vector3(0f, 0.05f, 0f), new Vector3(1.8f, 0.7f, 4.2f), paint);
+            AddPart(car.transform, "Body", new Vector3(0f, -0.1f, 0f), new Vector3(1.8f, 0.7f, 4.2f), paint);
             AddPart(car.transform, "Cabin", new Vector3(0f, 0.55f, -0.2f), new Vector3(1.6f, 0.6f, 2.0f), glass);
             for (int sx = -1; sx <= 1; sx += 2)
             {
@@ -426,6 +426,8 @@ namespace DrivingMadeEasy.Bootstrap
                 cam = camGo.AddComponent<Camera>();
                 camGo.AddComponent<AudioListener>();
             }
+
+            cam.fieldOfView = 68f; // a wider, driving-game field of view
 
             var driverCam = cam.gameObject.AddComponent<DriverCamera>();
             driverCam.target = carTransform;
