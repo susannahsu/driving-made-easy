@@ -119,6 +119,17 @@ namespace DrivingMadeEasy.Coaching
                     encourage: "Good — safe following distance.",
                     postHoc: "Followed too closely (tailgating).")));
 
+            r.Add(new RuleDefinition(
+                id: "collision", category: "safety", title: "Collision",
+                severity: RuleSeverity.Severe,
+                penalty: new RulePenalty(points: 40, fine: 1000, instantFail: true),
+                guidance: new RuleGuidance(
+                    preempt: "",
+                    correction: "You hit something — always leave people and cars a wide margin.",
+                    encourage: "",
+                    postHoc: "Collision — you struck a pedestrian or another vehicle."),
+                freeEncounters: 0)); // never coached — a collision always counts
+
             return r;
         }
     }

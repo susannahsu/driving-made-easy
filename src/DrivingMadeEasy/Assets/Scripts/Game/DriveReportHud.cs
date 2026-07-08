@@ -14,11 +14,22 @@ namespace DrivingMadeEasy.Game
         public CoachRuntime coach;
         public KeyCode finishKey = KeyCode.Tab;
 
+        [Tooltip("Minimum safety score to pass the lesson (and no severe/instant-fail).")]
+        public int passThreshold = 70;
+
         private bool _show;
+        private bool _lessonResult;
 
         private void Update()
         {
-            if (UnityEngine.Input.GetKeyDown(finishKey)) _show = !_show;
+            if (UnityEngine.Input.GetKeyDown(finishKey)) { _show = !_show; _lessonResult = false; }
+        }
+
+        /// Called by the finish line: show the report as a whole-lesson pass/fail verdict.
+        public void ShowLessonResult()
+        {
+            _show = true;
+            _lessonResult = true;
         }
 
         private void OnGUI()
@@ -37,7 +48,16 @@ namespace DrivingMadeEasy.Game
             GUILayout.BeginArea(new Rect(panel.x + 22, panel.y + 18, w - 44, h - 36));
 
             var title = new GUIStyle(GUI.skin.label) { fontSize = 24, fontStyle = FontStyle.Bold };
-            GUILayout.Label(report.Failed ? "Drive ended — not a pass" : "Drive report", title);
+            if (_lessonResult)
+            {
+                bool passed = !report.Failed && report.FinalScore >= passThreshold;
+                title.normal.textColor = passed ? new Color(0.5f, 1f, 0.5f) : new Color(1f, 0.55f, 0.55f);
+                GUILayout.Label(passed ? "Lesson 1 — Passed!" : "Lesson 1 — Not passed", title);
+            }
+            else
+            {
+                GUILayout.Label(report.Failed ? "Drive ended — not a pass" : "Drive report", title);
+            }
             GUILayout.Space(6);
 
             var big = new GUIStyle(GUI.skin.label) { fontSize = 18, wordWrap = true };

@@ -105,9 +105,18 @@ The course now runs the full residential rule set: **stop sign → 25 mph → cr
 school zone (15) → cross-traffic junction (yield + turn signal) → traffic light →
 following distance → lane-keeping → four-way stop** — **all 10 rules live in the world.**
 
+## Polish in
+
+- **Collisions matter**: pedestrians and cars carry a hazard volume — hit one while moving
+  and it's a Severe, instant-fail `collision` ticket (so yielding actually protects you).
+- **Traffic reacts**: cars brake (a forward raycast) for solid obstacles ahead instead of
+  driving through you, so cross traffic yields when you're in its path.
+- **Lesson pass/fail**: crossing the finish banner at the end of the course pops the report
+  as a whole-lesson verdict — **Lesson 1 — Passed!** if your safety score cleared the
+  threshold with no instant-fail, otherwise **Not passed**.
+
 ## What's next
 
-The residential rule set (Lesson 1) is now fully playable. Remaining M2 polish: proper
-lane-following / light-obeying traffic AI (cars still loop on fixed paths), collisions, a
-branching road network, and the end-of-lesson pass/fail gating. Voice is still on-screen
-text — on-device text-to-speech (`AVSpeechSynthesizer`) arrives with the iPhone build.
+Remaining M2 polish: fuller traffic AI (queuing at stops, obeying the lights, lane
+changes), a branching road network, and unlocking Lesson 2. Voice is still on-screen text —
+on-device text-to-speech (`AVSpeechSynthesizer`) arrives with the iPhone build.

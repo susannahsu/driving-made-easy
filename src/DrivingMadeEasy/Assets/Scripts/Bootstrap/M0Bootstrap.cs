@@ -27,25 +27,29 @@ namespace DrivingMadeEasy.Bootstrap
         public int coneCount = 5;
         public float coneSpacing = 9f;
 
+        // Set before scenery so pedestrians/cars can register collisions with the Coach.
+        private CoachRuntime _coach;
+
         private void Start()
         {
             ConfigureLighting();
             BuildGround();
             BuildRoad();
-            BuildScenery();
             GameObject car = BuildCar(new Vector3(0f, 0.6f, -20f));
             BuildCamera(car.transform);
-            CoachRuntime coach = BuildCoach();
-            BuildStopSign(coach);
+            _coach = BuildCoach();
+            BuildScenery();
+            BuildStopSign(_coach);
             // speed-limit stretch, crosswalk, school zone, junction, traffic light, lane test
-            BuildSpeedSign(coach, "speed_limit", 25, 2f, 20f, 36f, new Color(0.95f, 0.95f, 0.95f));
-            BuildCrosswalk(coach);
-            BuildSpeedSign(coach, "school_zone", 15, 60f, 74f, 26f, new Color(1f, 0.6f, 0.1f));
-            BuildIntersection(coach);
-            BuildTrafficLight(coach);
-            BuildFollowSection(coach);
-            BuildLaneZone(coach);
-            BuildFourWayStop(coach);
+            BuildSpeedSign(_coach, "speed_limit", 25, 2f, 20f, 36f, new Color(0.95f, 0.95f, 0.95f));
+            BuildCrosswalk(_coach);
+            BuildSpeedSign(_coach, "school_zone", 15, 60f, 74f, 26f, new Color(1f, 0.6f, 0.1f));
+            BuildIntersection(_coach);
+            BuildTrafficLight(_coach);
+            BuildFollowSection(_coach);
+            BuildLaneZone(_coach);
+            BuildFourWayStop(_coach);
+            BuildFinish(_coach);
         }
 
         // ---- Visual helpers --------------------------------------------------------
@@ -163,6 +167,13 @@ namespace DrivingMadeEasy.Bootstrap
             ped.rightLeg = Limb(root.transform, new Vector3(0.11f, 0.84f, 0f), 0.82f, 0.14f, pantsMat, shoeMat, true);
             ped.leftArm = Limb(root.transform, new Vector3(-0.28f, 1.34f, 0f), 0.66f, 0.11f, shirtMat, skin, false);
             ped.rightArm = Limb(root.transform, new Vector3(0.28f, 1.34f, 0f), 0.66f, 0.11f, shirtMat, skin, false);
+
+            // Collision hazard: hitting this person registers with the Coach.
+            var hazBox = root.AddComponent<BoxCollider>();
+            hazBox.isTrigger = true;
+            hazBox.center = new Vector3(0f, 0.9f, 0f);
+            hazBox.size = new Vector3(0.6f, 1.8f, 0.5f);
+            root.AddComponent<Hazard>().coach = _coach;
             return ped;
         }
 
@@ -494,6 +505,13 @@ namespace DrivingMadeEasy.Bootstrap
                 for (int wz = -1; wz <= 1; wz += 2)
                     Cyl(root, "Wheel", new Vector3(0.85f * wx, -0.18f, 1.35f * wz),
                         new Vector3(0.5f, 0.14f, 0.5f), new Vector3(0f, 0f, 90f), tyre);
+
+            // Collision hazard: the player striking this car registers with the Coach.
+            var hazBox = root.gameObject.AddComponent<BoxCollider>();
+            hazBox.isTrigger = true;
+            hazBox.center = new Vector3(0f, 0.4f, 0f);
+            hazBox.size = new Vector3(1.8f, 1.0f, 4.2f);
+            root.gameObject.AddComponent<Hazard>().coach = _coach;
         }
 
         private (WheelCollider collider, Transform mesh) BuildWheel(
@@ -902,6 +920,27 @@ namespace DrivingMadeEasy.Bootstrap
             fw.conflictCenter = new Vector3(0f, 0.4f, zCross);
             fw.conflictRadius = 8f;
             fw.ruleId = "four_way_stop";
+        }
+
+        // ---- Finish line (lesson pass/fail) ----------------------------------------
+
+        private void BuildFinish(CoachRuntime coach)
+        {
+            const float zFinish = 265f;
+
+            Box("FinishLine", new Vector3(0f, 0.06f, zFinish), new Vector3(7f, 0.04f, 0.6f), Mat(Color.white, 0f, 0.1f));
+            var postMat = Mat(new Color(0.3f, 0.3f, 0.32f), 0.3f, 0.4f);
+            Box("FinishPostL", new Vector3(-3.6f, 2.5f, zFinish), new Vector3(0.2f, 5f, 0.2f), postMat);
+            Box("FinishPostR", new Vector3(3.6f, 2.5f, zFinish), new Vector3(0.2f, 5f, 0.2f), postMat);
+            Box("FinishBanner", new Vector3(0f, 4.6f, zFinish), new Vector3(7.4f, 0.8f, 0.15f),
+                Mat(new Color(0.2f, 0.5f, 0.9f), 0.2f, 0.4f));
+
+            var zoneGo = new GameObject("FinishZone");
+            zoneGo.transform.position = new Vector3(0f, 1f, zFinish);
+            var box = zoneGo.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(7f, 3f, 2f);
+            zoneGo.AddComponent<FinishZone>().report = coach.GetComponent<DriveReportHud>();
         }
 
         // ---- Cones -----------------------------------------------------------------
