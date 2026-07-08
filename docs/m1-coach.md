@@ -96,14 +96,18 @@ crosswalk → cross-traffic junction → cone slalom**.
 - **Lane keeping**: a monitored straight stretch — drift off your lane/the road and the
   `lane_keeping` rule flags it.
 
-The course now runs: **stop sign → 25 mph stretch → crosswalk → school zone (15) →
-cross-traffic junction (yield + turn signal) → traffic light → lane-keeping straight**,
-exercising **8 in-world rules**.
+- **Following distance**: a slow lead car sits ahead in your lane; a `FollowZone` flags you
+  if you tailgate instead of leaving a safe gap (`following_distance`).
+- **Four-way stop**: an all-way stop with cross traffic; a `FourWayStopZone` checks you
+  stopped fully and didn't go while a car was crossing (`four_way_stop`).
 
-## What's next (toward a full Lesson 1)
+The course now runs the full residential rule set: **stop sign → 25 mph → crosswalk →
+school zone (15) → cross-traffic junction (yield + turn signal) → traffic light →
+following distance → lane-keeping → four-way stop** — **all 10 rules live in the world.**
 
-Still to wire in: **following distance** (needs a moving lead car) and the **4-way stop**
-(needs multi-car right-of-way). Traffic is currently visual-only and loops on a fixed path;
-proper lane-following / light-obeying AI, collisions, and a real road network are the rest
-of M2. Voice is still on-screen text — on-device text-to-speech (`AVSpeechSynthesizer`)
-arrives with the iPhone build.
+## What's next
+
+The residential rule set (Lesson 1) is now fully playable. Remaining M2 polish: proper
+lane-following / light-obeying traffic AI (cars still loop on fixed paths), collisions, a
+branching road network, and the end-of-lesson pass/fail gating. Voice is still on-screen
+text — on-device text-to-speech (`AVSpeechSynthesizer`) arrives with the iPhone build.

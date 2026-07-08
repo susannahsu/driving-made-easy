@@ -43,7 +43,9 @@ namespace DrivingMadeEasy.Bootstrap
             BuildSpeedSign(coach, "school_zone", 15, 60f, 74f, 26f, new Color(1f, 0.6f, 0.1f));
             BuildIntersection(coach);
             BuildTrafficLight(coach);
+            BuildFollowSection(coach);
             BuildLaneZone(coach);
+            BuildFourWayStop(coach);
         }
 
         // ---- Visual helpers --------------------------------------------------------
@@ -284,7 +286,7 @@ namespace DrivingMadeEasy.Bootstrap
         {
             var sidewalkMat = Mat(new Color(0.62f, 0.62f, 0.62f), 0f, 0.1f);
             for (int s = -1; s <= 1; s += 2)
-                Box("Sidewalk", new Vector3(4.6f * s, 0.06f, 85f), new Vector3(2.2f, 0.12f, 290f), sidewalkMat);
+                Box("Sidewalk", new Vector3(4.6f * s, 0.06f, 110f), new Vector3(2.2f, 0.12f, 340f), sidewalkMat);
 
             var trunkMat = Mat(new Color(0.35f, 0.25f, 0.16f));
             var leafMat = Mat(new Color(0.24f, 0.45f, 0.22f));
@@ -302,10 +304,10 @@ namespace DrivingMadeEasy.Bootstrap
             for (int s = -1; s <= 1; s += 2)
             {
                 float x = 12f * s;
-                for (int i = 0; i < 20; i++)
+                for (int i = 0; i < 22; i++)
                 {
                     float z = -28f + i * 14f;
-                    if (Mathf.Abs(z - 100f) < 10f) continue; // keep the junction clear
+                    if (Mathf.Abs(z - 100f) < 10f || Mathf.Abs(z - 245f) < 10f) continue; // keep junctions clear
 
                     if (i % 3 == 1)
                     {
@@ -354,8 +356,8 @@ namespace DrivingMadeEasy.Bootstrap
             // Grass plane, large enough to run beyond the fog so there's no visible edge.
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
             ground.name = "Ground";
-            ground.transform.position = new Vector3(0f, 0f, 90f);
-            ground.transform.localScale = Vector3.one * 38f; // ~380 units across
+            ground.transform.position = new Vector3(0f, 0f, 110f);
+            ground.transform.localScale = Vector3.one * 46f; // ~460 units across
             ground.GetComponent<Renderer>().sharedMaterial =
                 Mat(new Color(0.34f, 0.45f, 0.27f), 0f, 0.05f);
 
@@ -568,12 +570,12 @@ namespace DrivingMadeEasy.Bootstrap
             var paintWhite = Mat(new Color(0.92f, 0.92f, 0.92f), 0f, 0.1f);
             var paintYellow = Mat(new Color(0.92f, 0.82f, 0.2f), 0f, 0.1f);
 
-            Box("Road", new Vector3(0f, 0.02f, 85f), new Vector3(7f, 0.04f, 290f), asphalt);
+            Box("Road", new Vector3(0f, 0.02f, 110f), new Vector3(7f, 0.04f, 340f), asphalt);
 
             for (int s = -1; s <= 1; s += 2)
-                Box("RoadEdge", new Vector3(3.3f * s, 0.05f, 85f), new Vector3(0.15f, 0.05f, 290f), paintWhite);
+                Box("RoadEdge", new Vector3(3.3f * s, 0.05f, 110f), new Vector3(0.15f, 0.05f, 340f), paintWhite);
 
-            for (int i = 0; i < 42; i++)
+            for (int i = 0; i < 56; i++)
                 Box("CenterDash", new Vector3(0f, 0.05f, -36f + i * 6f), new Vector3(0.15f, 0.05f, 2f), paintYellow);
         }
 
@@ -814,13 +816,92 @@ namespace DrivingMadeEasy.Bootstrap
         private void BuildLaneZone(CoachRuntime coach)
         {
             var zoneGo = new GameObject("LaneZone");
-            zoneGo.transform.position = new Vector3(0f, 1f, 175f);
+            zoneGo.transform.position = new Vector3(0f, 1f, 205f);
             var box = zoneGo.AddComponent<BoxCollider>();
             box.isTrigger = true;
-            box.size = new Vector3(10f, 3f, 50f); // a long straight: keep it between the lines
+            box.size = new Vector3(10f, 3f, 40f); // a long straight: keep it between the lines
             var lane = zoneGo.AddComponent<LaneZone>();
             lane.coach = coach;
             lane.ruleId = "lane_keeping";
+        }
+
+        // ---- Following distance (slow lead car) ------------------------------------
+
+        private void BuildFollowSection(CoachRuntime coach)
+        {
+            var leadRoot = new GameObject("LeadCar");
+            AddCarShell(leadRoot.transform, new Color(0.72f, 0.72f, 0.76f));
+            var lead = leadRoot.AddComponent<TrafficCar>();
+            lead.startPoint = new Vector3(0f, 0.4f, 145f);
+            lead.endPoint = new Vector3(0f, 0.4f, 255f);
+            lead.speed = 3.5f;      // slow, so you catch up to it
+            lead.startOffset = 0f;
+
+            var zoneGo = new GameObject("FollowZone");
+            zoneGo.transform.position = new Vector3(0f, 1f, 160f);
+            var box = zoneGo.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(6f, 3f, 40f); // z ~ 140..180
+            var fz = zoneGo.AddComponent<FollowZone>();
+            fz.coach = coach;
+            fz.leadCar = leadRoot.transform;
+            fz.ruleId = "following_distance";
+        }
+
+        // ---- Four-way stop ---------------------------------------------------------
+
+        private void BuildFourWayStop(CoachRuntime coach)
+        {
+            const float zCross = 245f;
+
+            Box("CrossStreet2", new Vector3(0f, 0.02f, zCross), new Vector3(70f, 0.04f, 7f),
+                Mat(new Color(0.12f, 0.12f, 0.13f), 0f, 0.35f));
+            Box("StopLine2", new Vector3(0f, 0.06f, zCross - 3.6f), new Vector3(7f, 0.04f, 0.4f),
+                Mat(Color.white, 0f, 0.1f));
+
+            var poleMat = Mat(new Color(0.3f, 0.3f, 0.3f), 0.2f, 0.4f);
+            var signMat = Mat(new Color(0.8f, 0.05f, 0.05f), 0f, 0.2f);
+            foreach (var cxz in new[] { new Vector2(2.4f, zCross - 3.6f), new Vector2(-2.4f, zCross + 3.6f) })
+            {
+                var pole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                pole.name = "StopPole2";
+                pole.transform.localScale = new Vector3(0.1f, 1f, 0.1f);
+                pole.transform.position = new Vector3(cxz.x, 1f, cxz.y);
+                pole.GetComponent<Renderer>().sharedMaterial = poleMat;
+                Destroy(pole.GetComponent<CapsuleCollider>());
+
+                var sign = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                sign.name = "StopSign2";
+                sign.transform.localScale = new Vector3(0.7f, 0.7f, 0.08f);
+                sign.transform.position = new Vector3(cxz.x, 1.9f, cxz.y);
+                sign.GetComponent<Renderer>().sharedMaterial = signMat;
+                Destroy(sign.GetComponent<BoxCollider>());
+            }
+
+            var fleet = new List<TrafficCar>();
+            for (int i = 0; i < 2; i++)
+            {
+                var tc = new GameObject($"CrossCar2_{i}");
+                AddCarShell(tc.transform, i == 0 ? new Color(0.6f, 0.3f, 0.3f) : new Color(0.3f, 0.3f, 0.6f));
+                var car = tc.AddComponent<TrafficCar>();
+                car.startPoint = new Vector3(-35f, 0.4f, zCross);
+                car.endPoint = new Vector3(35f, 0.4f, zCross);
+                car.speed = 7f;
+                car.startOffset = i / 2f;
+                fleet.Add(car);
+            }
+
+            var zoneGo = new GameObject("FourWayStopZone");
+            zoneGo.transform.position = new Vector3(0f, 1f, zCross - 4f);
+            var box = zoneGo.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(6f, 3f, 10f); // approach z ~ zCross-9..zCross+1
+            var fw = zoneGo.AddComponent<FourWayStopZone>();
+            fw.coach = coach;
+            fw.crossTraffic = fleet.ToArray();
+            fw.conflictCenter = new Vector3(0f, 0.4f, zCross);
+            fw.conflictRadius = 8f;
+            fw.ruleId = "four_way_stop";
         }
 
         // ---- Cones -----------------------------------------------------------------

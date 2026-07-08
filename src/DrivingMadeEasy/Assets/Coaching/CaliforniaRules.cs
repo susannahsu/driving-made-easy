@@ -99,6 +99,17 @@ namespace DrivingMadeEasy.Coaching
                     postHoc: "Drifted out of the lane / off the road.")));
 
             r.Add(new RuleDefinition(
+                id: "four_way_stop", category: "right_of_way", title: "Four-way stop",
+                severity: RuleSeverity.Major,
+                penalty: new RulePenalty(points: 15, fine: 238),
+                guidance: new RuleGuidance(
+                    preempt: "Four-way stop — stop completely, and let cross traffic clear before you go.",
+                    correction: "At a four-way stop, come to a full stop and wait your turn — don't go while another car is crossing.",
+                    encourage: "Good — full stop and you waited your turn.",
+                    postHoc: "Four-way stop: rolled it or failed to yield to cross traffic.",
+                    "stop_sign", "stop_line")));
+
+            r.Add(new RuleDefinition(
                 id: "following_distance", category: "lane", title: "Following distance",
                 severity: RuleSeverity.Major,
                 penalty: new RulePenalty(points: 10, fine: 238),
