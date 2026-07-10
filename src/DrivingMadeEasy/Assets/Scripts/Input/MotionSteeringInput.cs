@@ -38,13 +38,13 @@ namespace DrivingMadeEasy.Input
         [Tooltip("Use the accelerometer for tilt rather than gyro attitude (more reliable).")]
         public bool useAccelerometer = true;
         [Tooltip("Accelerometer axis that reads left/right tilt in landscape (0=x, 1=y, 2=z). " +
-                 "If tilting the phone doesn't steer, try a different axis; the diagnostic HUD " +
+                 "On iPhone in landscape this is X (confirmed on-device); the diagnostic HUD " +
                  "shows which axis moves when you tilt.")]
-        [Range(0, 2)] public int accelAxis = 1;
+        [Range(0, 2)] public int accelAxis = 0;
         [Tooltip("Tilt (in g) beyond neutral before steering begins.")]
         public float accelDeadZone = 0.06f;
         [Tooltip("Tilt (in g) from neutral that gives full lock. Larger = LESS sensitive.")]
-        public float accelRange = 0.8f;
+        public float accelRange = 0.5f;
 
         [Header("Return-to-center assist")]
         [Tooltip("Beginner aid: pulls steering toward 0 when the phone is near level.")]
