@@ -1,0 +1,15 @@
+<!--
+  Preserve the collider types that GameObject.CreatePrimitive adds natively. IL2CPP
+  managed stripping can't see that we need them (we only ever Destroy them), so on iOS
+  builds it strips them and CreatePrimitive fails with "class '...Collider' doesn't exist".
+  Keeping them here fixes that for the ground plane, spheres, and cylinders.
+-->
+<linker>
+  <assembly fullname="UnityEngine.PhysicsModule">
+    <type fullname="UnityEngine.MeshCollider" preserve="all" />
+    <type fullname="UnityEngine.SphereCollider" preserve="all" />
+    <type fullname="UnityEngine.CapsuleCollider" preserve="all" />
+    <type fullname="UnityEngine.BoxCollider" preserve="all" />
+    <type fullname="UnityEngine.WheelCollider" preserve="all" />
+  </assembly>
+</linker>

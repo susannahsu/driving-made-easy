@@ -56,10 +56,27 @@ namespace DrivingMadeEasy.Bootstrap
 
         /// A Standard-shader material (Built-in RP) with optional metallic / smoothness /
         /// emission, so props read as real surfaces instead of flat-shaded primitives.
+        private static Shader _standardShader;
+
+        /// The Standard shader — pulled off a primitive's default material rather than
+        /// Shader.Find("Standard"), which can return null in a stripped IL2CPP (iOS) build.
+        /// The default material is always included in the build, so this is reliable.
+        private static Shader StandardShader()
+        {
+            if (_standardShader == null)
+            {
+                var probe = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                probe.SetActive(false);
+                _standardShader = probe.GetComponent<Renderer>().sharedMaterial.shader;
+                GameObject.Destroy(probe);
+            }
+            return _standardShader;
+        }
+
         private static Material Mat(Color color, float metallic = 0f, float smoothness = 0.25f,
                                     Color? emission = null)
         {
-            var m = new Material(Shader.Find("Standard"));
+            var m = new Material(StandardShader());
             m.color = color;
             m.SetFloat("_Metallic", metallic);
             m.SetFloat("_Glossiness", smoothness);
