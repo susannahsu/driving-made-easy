@@ -24,11 +24,16 @@ namespace DrivingMadeEasy.EditorTools
             EnsureBaseMaterials();
 
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, "com.drivingmadeeasy.app");
+            // Lock to ONE landscape orientation. Allowing both lets iOS flip the app between
+            // LandscapeLeft/Right as you tilt, which inverts the accelerometer axis mid-drive
+            // and breaks tilt steering unless the user manually locks rotation. Fixing a
+            // single orientation removes that requirement.
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
             PlayerSettings.allowedAutorotateToLandscapeLeft = true;
-            PlayerSettings.allowedAutorotateToLandscapeRight = true;
+            PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.allowedAutorotateToPortrait = false;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
-            PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
+            PlayerSettings.useAnimatedAutorotation = false;
 
             Debug.Log("Prepared iOS build: Standard shader force-included, landscape orientation, " +
                       "bundle id com.drivingmadeeasy.app. Next: File ▸ Build Settings ▸ iOS ▸ Build.");
