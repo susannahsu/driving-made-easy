@@ -113,6 +113,13 @@ namespace DrivingMadeEasy.Input
         public void SetBrake(float v) => _uiBrake = Mathf.Clamp01(v);
         public void SetReverse(bool r) => _uiReverse = r;
 
+        /// Toggle a turn signal from an on-screen button (tap again, or the opposite, cancels).
+        public void ToggleSignal(TurnSignal dir)
+        {
+            Signal = Signal == dir ? TurnSignal.None : dir;
+            _steeredHard = false;
+        }
+
         private void Update()
         {
             float targetSteer = _gyroAvailable ? ReadTiltSteering() : ReadDesktopSteering();

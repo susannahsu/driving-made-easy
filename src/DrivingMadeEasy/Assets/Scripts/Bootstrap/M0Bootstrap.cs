@@ -254,7 +254,7 @@ namespace DrivingMadeEasy.Bootstrap
             // driving-game cockpit), mounted above the hood and facing the driver.
             var pivot = new GameObject("SteeringWheel");
             pivot.transform.SetParent(car, false);
-            pivot.transform.localPosition = new Vector3(-0.32f, 0.5f, 0.5f);
+            pivot.transform.localPosition = new Vector3(0f, 0.5f, 0.5f);
             pivot.transform.localRotation = Quaternion.Euler(-160f, 0f, 0f); // ~20° back from vertical
 
             var plastic = Mat(new Color(0.08f, 0.08f, 0.09f), 0.2f, 0.5f);
@@ -470,6 +470,13 @@ namespace DrivingMadeEasy.Bootstrap
                 }
             };
 
+            // A raised hood you can line up against the lane to judge your position.
+            AddPart(car.transform, "Hood", new Vector3(0f, 0.32f, 1.5f), new Vector3(1.85f, 0.12f, 1.5f), paint);
+
+            car.AddComponent<CarLights>();
+            var carAudio = car.AddComponent<CarAudio>();
+            carAudio.car = controller;
+
             BuildSteeringWheel(car.transform, controller);
             BuildInterior(car.transform);
             return car;
@@ -498,9 +505,9 @@ namespace DrivingMadeEasy.Bootstrap
             AddPart(car, "Mirror", new Vector3(0f, 0.93f, 0.74f), new Vector3(0.3f, 0.09f, 0.03f), mirrorGlass, new Vector3(8f, 0f, 0f));
 
             // Gauge binnacle behind the wheel, with two dials read through the rim.
-            AddPart(car, "Binnacle", new Vector3(-0.32f, 0.46f, 0.72f), new Vector3(0.56f, 0.18f, 0.26f), trim);
-            Cyl(car, "Gauge", new Vector3(-0.45f, 0.49f, 0.6f), new Vector3(0.14f, 0.02f, 0.14f), new Vector3(80f, 0f, 0f), gaugeMat);
-            Cyl(car, "Gauge", new Vector3(-0.19f, 0.49f, 0.6f), new Vector3(0.14f, 0.02f, 0.14f), new Vector3(80f, 0f, 0f), gaugeMat);
+            AddPart(car, "Binnacle", new Vector3(0f, 0.46f, 0.72f), new Vector3(0.56f, 0.18f, 0.26f), trim);
+            Cyl(car, "Gauge", new Vector3(-0.13f, 0.49f, 0.6f), new Vector3(0.14f, 0.02f, 0.14f), new Vector3(80f, 0f, 0f), gaugeMat);
+            Cyl(car, "Gauge", new Vector3(0.13f, 0.49f, 0.6f), new Vector3(0.14f, 0.02f, 0.14f), new Vector3(80f, 0f, 0f), gaugeMat);
 
             // Side mirrors, glimpsed out the side windows.
             AddPart(car, "SideMirrorL", new Vector3(-0.97f, 0.6f, 0.7f), new Vector3(0.07f, 0.14f, 0.16f), trim);
@@ -613,6 +620,8 @@ namespace DrivingMadeEasy.Bootstrap
             hud.car = carTransform.GetComponent<CarController>();
             hud.driverInputSource = carTransform.GetComponent<MotionSteeringInput>();
             hud.rescue = carTransform.GetComponent<CarRescue>();
+            hud.lights = carTransform.GetComponent<CarLights>();
+            hud.audioRig = carTransform.GetComponent<CarAudio>();
         }
 
         // ---- Road (M2 scaffolding) -------------------------------------------------
