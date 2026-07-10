@@ -156,13 +156,13 @@ namespace DrivingMadeEasy.Input
                 // The accelerometer measures gravity; tilting the phone like a wheel changes
                 // the chosen axis. Robust and easy to reason about, unlike gyro attitude.
                 int axis = Mathf.Clamp(accelAxis, 0, 2);
-                float delta = UnityEngine.Input.acceleration[axis] - _neutralAccel;
-                if (invertSteering) delta = -delta;
+                float accelDelta = UnityEngine.Input.acceleration[axis] - _neutralAccel;
+                if (invertSteering) accelDelta = -accelDelta;
 
-                if (Mathf.Abs(delta) <= accelDeadZone) return 0f;
+                if (Mathf.Abs(accelDelta) <= accelDeadZone) return 0f;
                 float usable = Mathf.Max(0.01f, accelRange - accelDeadZone);
-                float norm = Mathf.Clamp((Mathf.Abs(delta) - accelDeadZone) / usable, 0f, 1f);
-                return Mathf.Sign(delta) * Mathf.Pow(norm, sensitivityExponent);
+                float norm = Mathf.Clamp((Mathf.Abs(accelDelta) - accelDeadZone) / usable, 0f, 1f);
+                return Mathf.Sign(accelDelta) * Mathf.Pow(norm, sensitivityExponent);
             }
 
             // Legacy gyro-attitude path (kept as a fallback).
