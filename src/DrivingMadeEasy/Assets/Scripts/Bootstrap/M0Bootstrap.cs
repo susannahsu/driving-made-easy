@@ -437,6 +437,8 @@ namespace DrivingMadeEasy.Bootstrap
             rb.drag = 0.05f;
             rb.angularDrag = 0.3f;
 
+            car.AddComponent<CarRescue>(); // never-get-stuck respawn
+
             // Wheels: front axle steers, rear axle drives.
             var fl = BuildWheel(car.transform, new Vector3(-0.9f, 0f, 1.5f), "FL");
             var fr = BuildWheel(car.transform, new Vector3(0.9f, 0f, 1.5f), "FR");
@@ -604,6 +606,7 @@ namespace DrivingMadeEasy.Bootstrap
             var hud = new GameObject("HUD").AddComponent<DrivingHud>();
             hud.car = carTransform.GetComponent<CarController>();
             hud.driverInputSource = carTransform.GetComponent<MotionSteeringInput>();
+            hud.rescue = carTransform.GetComponent<CarRescue>();
         }
 
         // ---- Road (M2 scaffolding) -------------------------------------------------

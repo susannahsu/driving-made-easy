@@ -28,11 +28,23 @@ namespace DrivingMadeEasy.Input
         [Tooltip("1 = linear. >1 = gentler near center, sharper near full lock.")]
         [Range(1f, 3f)] public float sensitivityExponent = 1.7f;
 
-        [Tooltip("Flip if tilting left steers right on your device (gyro frames vary).")]
+        [Tooltip("Flip if tilting left steers right on your device.")]
         public bool invertSteering = false;
 
         [Tooltip("How quickly the steering value chases the raw input. Higher = snappier.")]
-        [Range(1f, 30f)] public float responsiveness = 12f;
+        [Range(1f, 30f)] public float responsiveness = 10f;
+
+        [Header("Tilt steering (accelerometer — robust on device)")]
+        [Tooltip("Use the accelerometer for tilt rather than gyro attitude (more reliable).")]
+        public bool useAccelerometer = true;
+        [Tooltip("Accelerometer axis that reads left/right tilt in landscape (0=x, 1=y, 2=z). " +
+                 "If tilting the phone doesn't steer, try a different axis; the diagnostic HUD " +
+                 "shows which axis moves when you tilt.")]
+        [Range(0, 2)] public int accelAxis = 1;
+        [Tooltip("Tilt (in g) beyond neutral before steering begins.")]
+        public float accelDeadZone = 0.06f;
+        [Tooltip("Tilt (in g) from neutral that gives full lock. Larger = LESS sensitive.")]
+        public float accelRange = 0.8f;
 
         [Header("Return-to-center assist")]
         [Tooltip("Beginner aid: pulls steering toward 0 when the phone is near level.")]
@@ -59,9 +71,18 @@ namespace DrivingMadeEasy.Input
         // threshold) and then straightened out, the blinker switches itself off.
         private bool _steeredHard;
 
-        // Calibration: the device attitude captured as "straight ahead".
+        // Calibration.
         private Quaternion _neutralAttitude = Quaternion.identity;
+        private float _neutralAccel;
         private bool _gyroAvailable;
+
+        // On-screen pedal state, driven by the HUD buttons.
+        private float _uiThrottle, _uiBrake;
+        private bool _uiReverse;
+
+        /// Live accelerometer reading, for the diagnostic HUD.
+        public Vector3 RawAccel => UnityEngine.Input.acceleration;
+        public bool MotionActive => _gyroAvailable;
 
         private void Awake()
         {
@@ -73,14 +94,20 @@ namespace DrivingMadeEasy.Input
             Calibrate();
         }
 
-        /// <summary>Capture the current device pose as neutral (0° steering).</summary>
+        /// <summary>Capture the current device pose as neutral (straight ahead).</summary>
         public void Calibrate()
         {
             if (_gyroAvailable)
             {
                 _neutralAttitude = GyroToUnity(UnityEngine.Input.gyro.attitude);
+                _neutralAccel = UnityEngine.Input.acceleration[Mathf.Clamp(accelAxis, 0, 2)];
             }
         }
+
+        // On-screen buttons feed these.
+        public void SetThrottle(float v) => _uiThrottle = Mathf.Clamp01(v);
+        public void SetBrake(float v) => _uiBrake = Mathf.Clamp01(v);
+        public void SetReverse(bool r) => _uiReverse = r;
 
         private void Update()
         {
@@ -124,8 +151,21 @@ namespace DrivingMadeEasy.Input
 
         private float ReadTiltSteering()
         {
-            // Input.gyro.attitude is reported in the gyro's own right-handed frame; it must
-            // be converted into Unity's left-handed space before use (standard gotcha).
+            if (useAccelerometer)
+            {
+                // The accelerometer measures gravity; tilting the phone like a wheel changes
+                // the chosen axis. Robust and easy to reason about, unlike gyro attitude.
+                int axis = Mathf.Clamp(accelAxis, 0, 2);
+                float delta = UnityEngine.Input.acceleration[axis] - _neutralAccel;
+                if (invertSteering) delta = -delta;
+
+                if (Mathf.Abs(delta) <= accelDeadZone) return 0f;
+                float usable = Mathf.Max(0.01f, accelRange - accelDeadZone);
+                float norm = Mathf.Clamp((Mathf.Abs(delta) - accelDeadZone) / usable, 0f, 1f);
+                return Mathf.Sign(delta) * Mathf.Pow(norm, sensitivityExponent);
+            }
+
+            // Legacy gyro-attitude path (kept as a fallback).
             Quaternion attitude = GyroToUnity(UnityEngine.Input.gyro.attitude);
             Quaternion delta = Quaternion.Inverse(_neutralAttitude) * attitude;
 
@@ -170,32 +210,21 @@ namespace DrivingMadeEasy.Input
 
         private void ReadPedals()
         {
-            if (!_gyroAvailable || !useTouchPedals)
+            // Keyboard (editor) and the on-screen GAS/BRAKE buttons (device) both feed in,
+            // so whichever is pressed wins.
+            float kThrottle = 0f, kBrake = 0f;
+            bool kReverse = false;
+            if (!_gyroAvailable)
             {
-                // Editor / desktop: W or Up = gas, S or Down = brake, R held = reverse.
                 float v = UnityEngine.Input.GetAxisRaw("Vertical");
-                Throttle = Mathf.Max(0f, v);
-                Brake = Mathf.Max(0f, -v);
-                Reverse = UnityEngine.Input.GetKey(KeyCode.R);
-                return;
+                kThrottle = Mathf.Max(0f, v);
+                kBrake = Mathf.Max(0f, -v);
+                kReverse = UnityEngine.Input.GetKey(KeyCode.R);
             }
 
-            // On device: bottom-right half of the screen = gas, bottom-left half = brake,
-            // so the thumbs reach them while the phone is held wheel-style. M0 keeps this
-            // deliberately simple (digital); analog pressure is a later milestone.
-            float gas = 0f, brake = 0f;
-            foreach (Touch t in UnityEngine.Input.touches)
-            {
-                if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled) continue;
-                if (t.position.y > Screen.height * 0.5f) continue; // only bottom band acts as pedals
-                // Leave the center clear so the on-screen Recenter button isn't also read
-                // as a pedal: left third = brake, right third = gas.
-                if (t.position.x > Screen.width * 0.35f && t.position.x < Screen.width * 0.65f) continue;
-                if (t.position.x >= Screen.width * 0.65f) gas = 1f; else brake = 1f;
-            }
-            Throttle = gas;
-            Brake = brake;
-            Reverse = false; // reverse handled by an on-screen toggle in a later milestone
+            Throttle = Mathf.Clamp01(Mathf.Max(_uiThrottle, kThrottle));
+            Brake = Mathf.Clamp01(Mathf.Max(_uiBrake, kBrake));
+            Reverse = _uiReverse || kReverse;
         }
 
         /// <summary>

@@ -35,7 +35,7 @@ namespace DrivingMadeEasy.Vehicle
         [Header("Performance (forgiving)")]
         public float maxMotorTorque = 900f;
         public float maxBrakeTorque = 2600f;
-        public float maxSteerAngle = 32f;
+        public float maxSteerAngle = 24f;
         [Tooltip("Hard speed cap (m/s) so M0 stays controllable. 13.4 m/s ≈ 30 mph.")]
         public float maxSpeed = 13.4f;
 
