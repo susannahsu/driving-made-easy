@@ -115,7 +115,10 @@ namespace DrivingMadeEasy.EditorTools
             plist.root.values.Remove("UISupportedInterfaceOrientations");
             plist.root.values.Remove("UISupportedInterfaceOrientations~ipad");
             plist.root.SetBoolean("UIRequiresFullScreen", true);
+            // Allow both landscapes at the OS level (excludes portrait); the game pins one
+            // at runtime via Screen.orientation so it never flips mid-drive.
             var orient = plist.root.CreateArray("UISupportedInterfaceOrientations");
+            orient.AddString("UIInterfaceOrientationLandscapeLeft");
             orient.AddString("UIInterfaceOrientationLandscapeRight");
 
             plist.WriteToFile(plistPath);

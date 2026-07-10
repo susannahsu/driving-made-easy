@@ -32,6 +32,12 @@ namespace DrivingMadeEasy.Bootstrap
 
         private void Start()
         {
+            // Force landscape at runtime — the definitive fix. In portrait the accelerometer's
+            // "down" sits on the steering axis and pins the wheel; landscape frees it.
+            Screen.orientation = ScreenOrientation.LandscapeLeft;
+            Screen.autorotateToPortrait = false;
+            Screen.autorotateToPortraitUpsideDown = false;
+
             ConfigureLighting();
             BuildGround();
             BuildRoad();
