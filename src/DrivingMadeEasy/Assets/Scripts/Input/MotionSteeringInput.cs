@@ -91,7 +91,11 @@ namespace DrivingMadeEasy.Input
             {
                 UnityEngine.Input.gyro.enabled = true;
             }
+            UnityEngine.Input.multiTouchEnabled = true;
             Calibrate();
+            // Re-calibrate once the app has settled into landscape and the phone is being
+            // held, so tilt steering is zeroed correctly even before RECENTER is tapped.
+            Invoke(nameof(Calibrate), 1.0f);
         }
 
         /// <summary>Capture the current device pose as neutral (straight ahead).</summary>
