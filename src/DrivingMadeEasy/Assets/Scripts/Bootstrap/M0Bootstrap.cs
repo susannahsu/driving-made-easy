@@ -73,10 +73,21 @@ namespace DrivingMadeEasy.Bootstrap
             return _standardShader;
         }
 
+        // Base Standard materials shipped in Resources so the shader + its opaque/emissive
+        // variants are guaranteed in the iOS build (created by "Prepare iOS Build"). We clone
+        // these at runtime; Shader.Find/StandardShader() is only an editor fallback.
+        private static Material _baseOpaque;
+        private static Material _baseEmissive;
+
         private static Material Mat(Color color, float metallic = 0f, float smoothness = 0.25f,
                                     Color? emission = null)
         {
-            var m = new Material(StandardShader());
+            if (_baseOpaque == null) _baseOpaque = Resources.Load<Material>("dme_std");
+            if (_baseEmissive == null) _baseEmissive = Resources.Load<Material>("dme_std_emissive");
+
+            Material src = emission.HasValue ? _baseEmissive : _baseOpaque;
+            var m = src != null ? new Material(src) : new Material(StandardShader());
+
             m.color = color;
             m.SetFloat("_Metallic", metallic);
             m.SetFloat("_Glossiness", smoothness);

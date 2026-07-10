@@ -21,6 +21,7 @@ namespace DrivingMadeEasy.EditorTools
         public static void Prepare()
         {
             EnsureAlwaysIncludedShaders(new[] { "Standard", "Sprites/Default" });
+            EnsureBaseMaterials();
 
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, "com.drivingmadeeasy.app");
             PlayerSettings.allowedAutorotateToLandscapeLeft = true;
@@ -31,6 +32,36 @@ namespace DrivingMadeEasy.EditorTools
 
             Debug.Log("Prepared iOS build: Standard shader force-included, landscape orientation, " +
                       "bundle id com.drivingmadeeasy.app. Next: File ▸ Build Settings ▸ iOS ▸ Build.");
+        }
+
+        // Create Standard-shader materials under Resources/ so the shader AND the exact
+        // variants we use (opaque + emissive) are force-included in the build — the reliable
+        // fix for "everything is pink" on device. M0Bootstrap clones these at runtime.
+        private static void EnsureBaseMaterials()
+        {
+            const string dir = "Assets/Resources";
+            if (!AssetDatabase.IsValidFolder(dir))
+                AssetDatabase.CreateFolder("Assets", "Resources");
+
+            CreateStandardMaterial(dir + "/dme_std.mat", emissive: false);
+            CreateStandardMaterial(dir + "/dme_std_emissive.mat", emissive: true);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void CreateStandardMaterial(string path, bool emissive)
+        {
+            if (AssetDatabase.LoadAssetAtPath<Material>(path) != null) return;
+            var shader = Shader.Find("Standard");
+            if (shader == null) { Debug.LogWarning("Standard shader not found — can't create " + path); return; }
+
+            var m = new Material(shader);
+            if (emissive)
+            {
+                m.EnableKeyword("_EMISSION");
+                m.SetColor("_EmissionColor", Color.white);
+                m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
+            AssetDatabase.CreateAsset(m, path);
         }
 
         private static void EnsureAlwaysIncludedShaders(string[] names)
