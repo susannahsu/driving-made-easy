@@ -4,16 +4,16 @@ using DrivingMadeEasy.Vehicle;
 namespace DrivingMadeEasy.Game
 {
     /// <summary>
-    /// Judges the "stop on red" rule. If the light is red while you're in the approach zone,
+    /// Judges the "stop on red" rule. If the trafficLight is red while you're in the approach zone,
     /// it fires the heads-up, watches whether you stopped, and on exit passes only if you
-    /// came to a stop. If the light stayed green the whole way through, it's a no-event.
+    /// came to a stop. If the trafficLight stayed green the whole way through, it's a no-event.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
     public class TrafficLightZone : MonoBehaviour
     {
         public string ruleId = "traffic_light";
         public CoachRuntime coach;
-        public TrafficLight light;
+        public TrafficLight trafficLight;
         public float stopSpeedThreshold = 0.6f;
 
         private bool _armed;
@@ -33,8 +33,8 @@ namespace DrivingMadeEasy.Game
         {
             if (!_armed) return;
             var car = other.GetComponentInParent<CarController>();
-            if (car == null || light == null) return;
-            if (!light.MustStop) return;
+            if (car == null || trafficLight == null) return;
+            if (!trafficLight.MustStop) return;
 
             if (!_redWasActive)
             {
@@ -51,7 +51,7 @@ namespace DrivingMadeEasy.Game
             if (car == null) return;
             _armed = false;
 
-            if (!_redWasActive) return; // light was green — no encounter
+            if (!_redWasActive) return; // trafficLight was green — no encounter
             coach.NotifyEvaluated(ruleId, passed: _minSpeedWhileRed <= stopSpeedThreshold);
         }
     }

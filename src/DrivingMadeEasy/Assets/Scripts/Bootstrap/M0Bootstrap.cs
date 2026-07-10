@@ -851,7 +851,7 @@ namespace DrivingMadeEasy.Bootstrap
             box.size = new Vector3(6f, 3f, 10f); // approach z ~ 127..137
             var z = zoneGo.AddComponent<TrafficLightZone>();
             z.coach = coach;
-            z.light = tl;
+            z.trafficLight = tl;
             z.ruleId = "traffic_light";
         }
 
