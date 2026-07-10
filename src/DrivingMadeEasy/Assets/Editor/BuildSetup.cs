@@ -104,8 +104,20 @@ namespace DrivingMadeEasy.EditorTools
             string plistPath = path + "/Info.plist";
             var plist = new UnityEditor.iOS.Xcode.PlistDocument();
             plist.ReadFromFile(plistPath);
+
             plist.root.SetString("NSMotionUsageDescription",
                 "Driving Made Easy uses the device's motion sensor so you can tilt the phone to steer.");
+
+            // Force a single landscape orientation — the definitive way, independent of
+            // Unity PlayerSettings. This stops the app launching portrait (cropping the
+            // landscape UI) and stops iOS flipping between landscapes as you tilt (which
+            // would invert the accelerometer and break steering).
+            plist.root.values.Remove("UISupportedInterfaceOrientations");
+            plist.root.values.Remove("UISupportedInterfaceOrientations~ipad");
+            plist.root.SetBoolean("UIRequiresFullScreen", true);
+            var orient = plist.root.CreateArray("UISupportedInterfaceOrientations");
+            orient.AddString("UIInterfaceOrientationLandscapeRight");
+
             plist.WriteToFile(plistPath);
         }
 #endif
